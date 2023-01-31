@@ -1,7 +1,7 @@
 import os
 
 from gym.spaces import Box, Discrete, Tuple
-from mbbl.env.env_util import box
+from mbbl_env.env.env_util import box
 
 ENV_ASSET_DIR = os.path.join(os.path.dirname(__file__), 'assets')
 

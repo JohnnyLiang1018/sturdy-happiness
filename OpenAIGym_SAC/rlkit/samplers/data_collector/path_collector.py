@@ -2,7 +2,8 @@ from collections import deque, OrderedDict
 
 from rlkit.core.eval_util import create_stats_ordered_dict
 from rlkit.samplers.rollout_functions import rollout, multitask_rollout, ensemble_rollout, ensemble_eval_rollout
-from rlkit.samplers.rollout_functions import ensemble_ucb_rollout
+# from rlkit.samplers.rollout_functions import ensemble_ucb_rollout
+from rlkit.samplers.rollout import ensemble_ucb_rollout
 from rlkit.samplers.data_collector.base import PathCollector
 
 class MdpPathCollector(PathCollector):
@@ -127,6 +128,7 @@ class MdpPathCollector(PathCollector):
 class EnsembleMdpPathCollector(PathCollector):
     def __init__(
             self,
+            client,
             env,
             policy,
             num_ensemble,
@@ -143,6 +145,7 @@ class EnsembleMdpPathCollector(PathCollector):
     ):
         if render_kwargs is None:
             render_kwargs = {}
+        self.client = client
         self._env = env
         self._policy = policy
         self._max_num_epoch_paths_saved = max_num_epoch_paths_saved
@@ -167,14 +170,18 @@ class EnsembleMdpPathCollector(PathCollector):
             num_steps,
             discard_incomplete_paths,
     ):
+        paths_sim = [] ##
+        paths_real = [] ##
         paths = []
         num_steps_collected = 0
+        print("collecting new path")
         while num_steps_collected < num_steps:
             max_path_length_this_loop = min(  # Do not go over num_steps
                 max_path_length,
                 num_steps - num_steps_collected,
             )
             if self.eval_flag:
+                print("eval")
                 path = ensemble_eval_rollout(
                     self._env,
                     self._policy,
@@ -183,7 +190,8 @@ class EnsembleMdpPathCollector(PathCollector):
                 )
             else:
                 if self.inference_type > 0: # UCB
-                    path = ensemble_ucb_rollout(
+                    sim_1_path, sim_2_path, real_path = ensemble_ucb_rollout(
+                        self.client,
                         self._env,
                         self._policy,
                         critic1=self.critic1,
@@ -195,6 +203,31 @@ class EnsembleMdpPathCollector(PathCollector):
                         max_path_length=max_path_length_this_loop,
                         ber_mean=self.ber_mean,
                     )
+                    sim_1 = False
+                    sim_2 = False
+                    real = False
+                    path_len_1 = len(sim_1_path['actions'])
+                    if(path_len_1 != max_path_length and not sim_1_path['terminals'][-1] and discard_incomplete_paths):
+                        print("discard")
+                        sim_1 = True
+                    path_len_2 = len(sim_2_path['actions'])
+                    if(path_len_2 != max_path_length and not sim_2_path['terminals'][-1] and discard_incomplete_paths):
+                        print("discard")
+                        sim_2 = True
+                    path_len_3 = len(real_path['actions'])
+                    if(path_len_3 != max_path_length and not real_path['terminals'][-1] and discard_incomplete_paths):
+                        print("discard")
+                        real = True
+            
+                    if sim_1 != True:
+                        num_steps_collected += path_len_1
+                        paths_sim.append(sim_1_path)
+                    if sim_2 != True:
+                        num_steps_collected += path_len_2
+                        paths_sim.append(sim_2_path)
+                    if real != True:
+                        num_steps_collected += path_len_3
+                        paths_real.append(sim_2_path)
                 else:
                     path = ensemble_rollout(
                         self._env,
@@ -204,19 +237,43 @@ class EnsembleMdpPathCollector(PathCollector):
                         max_path_length=max_path_length_this_loop,
                         ber_mean=self.ber_mean,
                     )
-            path_len = len(path['actions'])
-            if (
-                    path_len != max_path_length
-                    and not path['terminals'][-1]
-                    and discard_incomplete_paths
-            ):
-                break
-            num_steps_collected += path_len
-            paths.append(path)
-        self._num_paths_total += len(paths)
+                    path_len = len(path['actions'])
+                    if (
+                        path_len != max_path_length
+                        and not path['terminals'][-1]
+                        and discard_incomplete_paths
+                    ):
+                        break
+                    num_steps_collected += path_len
+                    paths.append(path)
+                    self._num_paths_total += len(paths)
+                    self._num_steps_total += num_steps_collected
+                    self._epoch_paths.extend(paths)
+                    return paths
+
+                    
+        #     path_len = len(path['actions'])
+        #     if (
+        #             path_len != max_path_length
+        #             and not path['terminals'][-1]
+        #             and discard_incomplete_paths
+        #     ):
+        #         break
+        #     num_steps_collected += path_len
+        #     paths.append(path)
+        # self._num_paths_total += len(paths)
+        # self._num_steps_total += num_steps_collected
+        # self._epoch_paths.extend(paths)
+        # return paths
+
+
+        self._num_paths_total += len(paths_sim)
+        self._num_paths_total += len(paths_real)
         self._num_steps_total += num_steps_collected
-        self._epoch_paths.extend(paths)
-        return paths
+        self._epoch_paths.extend(paths_sim)
+        self._epoch_paths.extend(paths_real)    
+
+        return paths_sim, paths_real
 
     def get_epoch_paths(self):
         return self._epoch_paths

@@ -6,9 +6,14 @@ from rlkit.envs.wrappers import NormalizedBoxEnv
 from rlkit.launchers.launcher_util import setup_logger_custom, set_seed
 from rlkit.samplers.data_collector import EnsembleMdpPathCollector
 from rlkit.torch.sac.policies import TanhGaussianPolicy, MakeDeterministic
-from rlkit.torch.sac.neurips20_sac_ensemble import NeurIPS20SACEnsembleTrainer
+# from rlkit.torch.sac.neurips20_sac_ensemble import NeurIPS20SACEnsembleTrainer
+from sunrise_async.sac_ensemble import NeurIPS20SACEnsembleTrainer
 from rlkit.torch.networks import FlattenMlp
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
+
+import gym
+from sunrise_async.client import Client
+import pickle
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -30,7 +35,7 @@ def parse_args():
     parser.add_argument('--ber_mean', default=0.5, type=float)
     
     # inference
-    parser.add_argument('--inference_type', default=0.0, type=float)
+    parser.add_argument('--inference_type', default=1.0, type=float)
     
     # corrective feedback
     parser.add_argument('--temperature', default=20.0, type=float)
@@ -42,15 +47,19 @@ def get_env(env_name, seed):
 
     if env_name in ['gym_walker2d', 'gym_hopper',
                     'gym_cheetah', 'gym_ant']:
-        from mbbl.env.gym_env.walker import env
+        from mbbl_env.env.gym_env.walker import env
     env = env(env_name=env_name, rand_seed=seed, misc_info={'reset_type': 'gym'})
     return env
 
 def experiment(variant):
-    expl_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
-    eval_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
-    obs_dim = expl_env.observation_space.low.size
-    action_dim = eval_env.action_space.low.size
+    # expl_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
+    # eval_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
+    # obs_dim = expl_env.observation_space.low.size
+    # action_dim = eval_env.action_space.low.size
+    expl_env = gym.make("Pendulum-v0")
+    eval_env = gym.make("Pendulum-v0")
+    obs_dim = 3
+    action_dim = 1
     
     M = variant['layer_size']
     num_layer = variant['num_layer']
@@ -58,6 +67,8 @@ def experiment(variant):
     
     NUM_ENSEMBLE = variant['num_ensemble']
     L_qf1, L_qf2, L_target_qf1, L_target_qf2, L_policy, L_eval_policy = [], [], [], [], [], []
+
+    client = Client()
     
     for _ in range(NUM_ENSEMBLE):
     
@@ -96,13 +107,15 @@ def experiment(variant):
         L_eval_policy.append(eval_policy)
     
     eval_path_collector = EnsembleMdpPathCollector(
+        client,
         eval_env,
         L_eval_policy,
         NUM_ENSEMBLE,
-        eval_flag=True,
+        eval_flag=False,
     )
     
     expl_path_collector = EnsembleMdpPathCollector(
+        client,
         expl_env,
         L_policy,
         NUM_ENSEMBLE,
@@ -114,7 +127,14 @@ def experiment(variant):
         feedback_type=1,
     )
     
-    replay_buffer = EnsembleEnvReplayBuffer(
+    replay_buffer_sim = EnsembleEnvReplayBuffer(
+        variant['replay_buffer_size'],
+        expl_env,
+        NUM_ENSEMBLE,
+        log_dir=variant['log_dir'],
+    )
+
+    replay_buffer_real = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
         expl_env,
         NUM_ENSEMBLE,
@@ -142,12 +162,17 @@ def experiment(variant):
         evaluation_env=eval_env,
         exploration_data_collector=expl_path_collector,
         evaluation_data_collector=eval_path_collector,
-        replay_buffer=replay_buffer,
-        **variant['algorithm_kwargs']
+        replay_buffer=replay_buffer_sim,
+        **variant['algorithm_kwargs'],
+        replay_buffer_real=replay_buffer_real ##
     )
     
     algorithm.to(ptu.device)
     algorithm.train()
+    with open('stat.pickle','wb') as handle:
+        pickle.dump(trainer.get_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # pickle.dumps(L_policy[0])
+    # print("success")
 
 
 if __name__ == "__main__":
@@ -160,7 +185,7 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=210,
+            num_epochs=50,
             num_eval_steps_per_epoch=1000,
             num_trains_per_train_loop=1000,
             num_expl_steps_per_train_loop=1000,
@@ -187,6 +212,7 @@ if __name__ == "__main__":
         temperature=args.temperature,
         log_dir="",
     )
+    
                             
     set_seed(args.seed)
     exp_name = 'SUNRISE'

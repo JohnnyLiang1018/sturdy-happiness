@@ -15,6 +15,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             exploration_data_collector: PathCollector,
             evaluation_data_collector: PathCollector,
             replay_buffer: ReplayBuffer,
+            replay_buffer_real: ReplayBuffer, ##
             batch_size,
             max_path_length,
             num_epochs,
@@ -24,6 +25,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             num_train_loops_per_epoch=1,
             min_num_steps_before_training=0,
             save_frequency=0,
+
     ):
         super().__init__(
             trainer,
@@ -42,44 +44,58 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
         self.num_expl_steps_per_train_loop = num_expl_steps_per_train_loop
         self.min_num_steps_before_training = min_num_steps_before_training
         self.save_frequency = save_frequency
+        self.replay_buffer_real = replay_buffer_real ##
         
     def _train(self):
+        print("beginning of training")
         if self.min_num_steps_before_training > 0:
-            init_expl_paths = self.expl_data_collector.collect_new_paths(
+            print("collect initial path")
+            init_expl_paths_sim, init_expl_paths_real = self.expl_data_collector.collect_new_paths(
                 self.max_path_length,
                 self.min_num_steps_before_training,
                 discard_incomplete_paths=False,
             )
-            self.replay_buffer.add_paths(init_expl_paths)
+            # init_expl_paths = self.expl_data_collector.collect_new_paths(
+            #     self.max_path_length,
+            #     self.min_num_steps_before_training,
+            #     discard_incomplete_paths=False,
+            # )
+            self.replay_buffer.add_paths(init_expl_paths_sim)
+            self.replay_buffer_real.add_paths(init_expl_paths_real)
             self.expl_data_collector.end_epoch(-1)
 
         for epoch in gt.timed_for(
                 range(self._start_epoch, self.num_epochs),
                 save_itrs=True,
         ):
+            print("start eval collector")
             self.eval_data_collector.collect_new_paths(
                 self.max_path_length,
                 self.num_eval_steps_per_epoch,
                 discard_incomplete_paths=True,
             )
+            print("end eval collector")
             gt.stamp('evaluation sampling')
 
             for _ in range(self.num_train_loops_per_epoch):
-                new_expl_paths = self.expl_data_collector.collect_new_paths(
+                new_expl_paths_sim, new_expl_paths_real = self.expl_data_collector.collect_new_paths(
                     self.max_path_length,
                     self.num_expl_steps_per_train_loop,
                     discard_incomplete_paths=False,
                 )
                 gt.stamp('exploration sampling', unique=False)
 
-                self.replay_buffer.add_paths(new_expl_paths)
+                self.replay_buffer.add_paths(new_expl_paths_sim)
+                self.replay_buffer_real.add_paths(new_expl_paths_real)
                 gt.stamp('data storing', unique=False)
 
                 self.training_mode(True)
+                print("start training")
                 for _ in range(self.num_trains_per_train_loop):
-                    train_data = self.replay_buffer.random_batch(
-                        self.batch_size)
-                    self.trainer.train(train_data)
+                    train_data_sim = self.replay_buffer.random_batch(
+                        self.batch_size - self.batch_size/3)
+                    train_data_real = self.replay_buffer_real.random_batch(self.batch_size/3)
+                    self.trainer.train(train_data_sim,train_data_real)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
 

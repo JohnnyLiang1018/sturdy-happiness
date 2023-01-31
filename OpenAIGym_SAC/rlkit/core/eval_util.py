@@ -35,10 +35,19 @@ def get_generic_path_information(paths, stat_prefix=''):
 
     for info_key in ['env_infos', 'agent_infos']:
         if info_key in paths[0]:
-            all_env_infos = [
-                ppp.list_of_dicts__to__dict_of_lists(p[info_key])
-                for p in paths
-            ]
+            # all_env_infos = [
+            #     ppp.list_of_dicts__to__dict_of_lists(p[info_key])
+            #     for p in paths
+            # ]
+            all_env_infos = []
+            for p in paths:
+                env_infos = [
+                    ppp.list_of_dicts__to__dict_of_lists(s)
+                    for s in p[info_key]
+                ]
+                all_env_infos.append(
+                    ppp.list_of_dicts__to__dict_of_lists(env_infos)
+                )
             for k in all_env_infos[0].keys():
                 final_ks = np.array([info[k][-1] for info in all_env_infos])
                 first_ks = np.array([info[k][0] for info in all_env_infos])

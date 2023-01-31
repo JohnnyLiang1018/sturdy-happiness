@@ -143,7 +143,8 @@ def dict_of_list__to__list_of_dicts(dict, n_items):
             new_dicts[i][key] = values[i]
     return new_dicts
 
-
+## TODO
+## The first item of the list does not contains all the keys
 def list_of_dicts__to__dict_of_lists(lst):
     """
     ```
@@ -159,12 +160,17 @@ def list_of_dicts__to__dict_of_lists(lst):
     """
     if len(lst) == 0:
         return {}
-    keys = lst[0].keys()
+    # keys = lst[0].keys()
     output_dict = collections.defaultdict(list)
     for d in lst:
-        assert set(d.keys()) == set(keys)
-        for k in keys:
-            output_dict[k].append(d[k])
+        # assert set(d.keys()) == set(keys)
+        # for k in keys:
+        #     output_dict[k].append(d[k])
+        for key in d:
+            if key in output_dict.keys():
+                output_dict[key].append(d[key])
+            else:
+                output_dict[key] = [d[key]]
     return output_dict
 
 

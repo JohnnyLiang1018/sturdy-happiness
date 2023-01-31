@@ -65,7 +65,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             if target_entropy:
                 self.target_entropy = target_entropy
             else:
-                self.target_entropy = -np.prod(self.env.action_space.shape).item()  # heuristic value from Tuomas
+                # Pendulum action space: (1,)
+                self.target_entropy = -np.prod((1,)).item()  # heuristic value from Tuomas
             self.alpha_optimizer, self.log_alpha = [], []
             for _ in range(self.num_ensemble):
                 log_alpha = ptu.zeros(1, requires_grad=True)
@@ -110,7 +111,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
     def corrective_feedback(self, obs, update_type):
         std_Q_list = []
-        
+        # obs_sim = obs[:,:3]
+        # obs_real = obs[:,3:]
         if self.feedback_type == 0 or self.feedback_type == 2:
             for en_index in range(self.num_ensemble):
                 with torch.no_grad():
@@ -123,18 +125,18 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     else:
                         actor_Q1 = self.target_qf1[en_index](obs, policy_action)
                         actor_Q2 = self.target_qf2[en_index](obs, policy_action)
-                    mean_actor_Q = 0.5*(actor_Q1 + actor_Q2)
+                    mean_actor_Q= 0.5*(actor_Q1 + actor_Q2)
                     var_Q = 0.5*((actor_Q1 - mean_actor_Q)**2 + (actor_Q2 - mean_actor_Q)**2)
                 std_Q_list.append(torch.sqrt(var_Q).detach())
                 
         elif self.feedback_type == 1 or self.feedback_type == 3:
-            mean_Q, var_Q = None, None
+            mean_Q_sim, mean_Q_real, var_Q = None, None, None
             L_target_Q = []
             for en_index in range(self.num_ensemble):
                 with torch.no_grad():
                     policy_action, _, _, _, *_ = self.policy[en_index](
                         obs, reparameterize=True, return_log_prob=True,
-                    )
+                    )  ## policy action from sim environment?
                     
                     if update_type == 0: # actor
                         target_Q1 = self.qf1[en_index](obs, policy_action)
@@ -149,25 +151,29 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     else:
                         mean_Q += 0.5*(target_Q1 + target_Q2) / self.num_ensemble
 
+
             temp_count = 0
-            for target_Q in L_target_Q:
+            for i in range(len(L_target_Q)):
                 if temp_count == 0:
-                    var_Q = (target_Q.detach() - mean_Q)**2
+                    ## var_Q = (target_Q.detach() - mean_Q)**2
+                    var_Q = (L_target_Q[i].detach() - mean_Q)**2
                 else:
-                    var_Q += (target_Q.detach() - mean_Q)**2
+                    ## var_Q += (target_Q.detach() - mean_Q)**2
+                    var_Q += (L_target_Q[i].detach() - mean_Q)**2
                 temp_count += 1
             var_Q = var_Q / temp_count
             std_Q_list.append(torch.sqrt(var_Q).detach())
+            # std_Q_list[-1] = torch.tensor(1.0) ##
 
         return std_Q_list
         
-    def train_from_torch(self, batch):
-        rewards = batch['rewards']
-        terminals = batch['terminals']
-        obs = batch['observations']
-        actions = batch['actions']
-        next_obs = batch['next_observations']
-        masks = batch['masks']
+    def train_from_torch(self, batch_sim, batch_real):
+        rewards = torch.cat((batch_sim['rewards'],batch_real['rewards']))
+        terminals = torch.cat((batch_sim['terminals'], batch_real['terminals']))
+        obs = torch.cat((batch_sim['observations'], batch_real['observations']))
+        actions = torch.cat((batch_sim['actions'], batch_real['actions']))
+        next_obs = torch.cat((batch_sim['next_observations'], batch_real['next_observations']))
+        masks = torch.cat((batch_sim['masks'], batch_real['masks']))
         
         # variables for logging
         tot_qf1_loss, tot_qf2_loss, tot_q1_pred, tot_q2_pred, tot_q_target = 0, 0, 0, 0, 0
@@ -176,6 +182,12 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         
         std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0)
         std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1)
+
+        # obs_sim = obs[:,:3]
+        # obs_real = obs[:,3:]
+
+        # next_sim = next_obs[:,:3]
+        # next_real = next_obs[:,3:]
         
         for en_index in range(self.num_ensemble):
             mask = masks[:,en_index].reshape(-1, 1)
@@ -244,9 +256,6 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             qf2_loss = self.qf_criterion(q2_pred, q_target.detach()) * mask * (weight_target_Q.detach())
             qf1_loss = qf1_loss.sum() / (mask.sum() + 1)
             qf2_loss = qf2_loss.sum() / (mask.sum() + 1)
-
-            print("qf1_loss ", qf1_loss)
-            print("qf2_loss ", qf2_loss)
             
             """
             Update networks
