@@ -106,6 +106,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.discount = discount
         self.reward_scale = reward_scale
         self.eval_statistics = OrderedDict()
+        self.diagram_statistics = OrderedDict() ##
+        self.diagram_statistics['Policy_loss'] = [] ##
+        self.diagram_statistics['Log_pi'] = [] ##
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
@@ -188,6 +191,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
         # next_sim = next_obs[:,:3]
         # next_real = next_obs[:,3:]
+        log_pi_list = [] ##
         
         for en_index in range(self.num_ensemble):
             mask = masks[:,en_index].reshape(-1, 1)
@@ -198,6 +202,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             new_obs_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy[en_index](
                 obs, reparameterize=True, return_log_prob=True,
             )
+            log_pi_list.append(log_pi) ##
+
             if self.use_automatic_entropy_tuning:
                 alpha_loss = -(self.log_alpha[en_index] * (log_pi + self.target_entropy).detach()) * mask
                 alpha_loss = alpha_loss.sum() / (mask.sum() + 1)
@@ -312,6 +318,11 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.eval_statistics['Policy Loss'] = np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))
+            self.diagram_statistics['Policy_loss'] = self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
+                tot_policy_loss
+            ))) ##
+            self.diagram_statistics['Log_pi'] = self.diagram_statistics['Log_pi'].append(log_pi_list) ##
+
             self.eval_statistics.update(create_stats_ordered_dict(
                 'Q1 Predictions',
                 ptu.get_numpy(tot_q1_pred),
@@ -344,6 +355,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
     def get_diagnostics(self):
         return self.eval_statistics
+
+    def get_diagram_diagnostics(self):
+        return self.diagram_statistics ##
 
     def end_epoch(self, epoch):
         self._need_to_update_eval_statistics = True

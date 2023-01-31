@@ -170,7 +170,7 @@ def experiment(variant):
     algorithm.to(ptu.device)
     algorithm.train()
     with open('stat.pickle','wb') as handle:
-        pickle.dump(trainer.get_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
     # pickle.dumps(L_policy[0])
     # print("success")
 
