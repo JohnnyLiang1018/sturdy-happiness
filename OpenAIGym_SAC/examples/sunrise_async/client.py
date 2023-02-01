@@ -13,6 +13,9 @@ class Client(object):
         self.client_socket = socket.socket()
         self.client_socket.connect((self.host, self.port))
         self.state_init = pickle.loads(self.client_socket.recv(1024))
+        print(len(self.state_init))
+        print(self.state_init[0])
+        print(self.state_init[1])
 
         
 
