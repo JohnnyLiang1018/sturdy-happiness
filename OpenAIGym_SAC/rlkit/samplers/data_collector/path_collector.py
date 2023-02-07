@@ -157,8 +157,8 @@ class EnsembleMdpPathCollector(PathCollector):
         self.ber_mean = ber_mean
         self.critic1 = critic1
         self.critic2 = critic2
-        self.inference_type = inference_type
-        self.feedback_type = -1
+        self.inference_type = -1
+        self.feedback_type = feedback_type
         self._noise_flag = noise_flag
         
         self._num_steps_total = 0
