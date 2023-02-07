@@ -51,7 +51,7 @@ class CollectionRequest():
         # dummy_input = torch.randn(1, 1, 224, 224, requires_grad=True)
         # torch_model = SuperResolutionNet(upscale_factor=3)
         # torch_model.eval()
-        dummy_input = torch.Tesnor(env.reset())
+        dummy_input = torch.Tensor(env.reset())
         torch.onnx.export(agents[0],dummy_input, "agent.onnx", verbose=True)
         # torch.onnx.export(torch_model, dummy_input, "alexnet.onnx", verbose=True)
 
