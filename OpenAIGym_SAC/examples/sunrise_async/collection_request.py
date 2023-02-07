@@ -55,7 +55,7 @@ class CollectionRequest():
         agents[0].eval()
         dummy_input = torch.randn(3, requires_grad=True)
         print(dummy_input)
-        # torch.onnx.export(agents[0],dummy_input, "agent.onnx", verbose=True)
+        torch.onnx.export(agents[0],dummy_input, "agent.onnx", verbose=True)
         # torch.onnx.export(torch_model, dummy_input, "alexnet.onnx", verbose=True)
 
         # for agent in agents:
