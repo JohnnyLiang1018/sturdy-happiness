@@ -3,7 +3,7 @@ from collections import deque, OrderedDict
 from rlkit.core.eval_util import create_stats_ordered_dict
 from rlkit.samplers.rollout_functions import rollout, multitask_rollout, ensemble_rollout, ensemble_eval_rollout
 # from rlkit.samplers.rollout_functions import ensemble_ucb_rollout
-from rlkit.samplers.rollout import ensemble_ucb_rollout
+from rlkit.samplers.rollout import ensemble_ucb_rollout, ensemble_real_rollout
 from rlkit.samplers.data_collector.base import PathCollector
 
 class MdpPathCollector(PathCollector):
@@ -228,6 +228,17 @@ class EnsembleMdpPathCollector(PathCollector):
                     if real != True:
                         num_steps_collected += path_len_3
                         paths_real.append(sim_2_path)
+
+                elif self.inference_type == -1:
+                    path = ensemble_real_rollout(
+                        self._env,
+                        self._policy,
+                        self.num_ensemble,
+                        max_path_length_this_loop
+                    )
+
+                    return path
+
                 else:
                     path = ensemble_rollout(
                         self._env,

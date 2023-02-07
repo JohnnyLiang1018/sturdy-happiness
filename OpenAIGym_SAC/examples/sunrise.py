@@ -7,12 +7,12 @@ from rlkit.launchers.launcher_util import setup_logger_custom, set_seed
 from rlkit.samplers.data_collector import EnsembleMdpPathCollector
 from rlkit.torch.sac.policies import TanhGaussianPolicy, MakeDeterministic
 # from rlkit.torch.sac.neurips20_sac_ensemble import NeurIPS20SACEnsembleTrainer
-from sunrise_async.sac_ensemble import NeurIPS20SACEnsembleTrainer
+from examples.sunrise_async.sac_ensemble import NeurIPS20SACEnsembleTrainer
 from rlkit.torch.networks import FlattenMlp
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 
 import gym
-from sunrise_async.client import Client
+from examples.sunrise_async.client import Client
 import pickle
 
 def parse_args():
