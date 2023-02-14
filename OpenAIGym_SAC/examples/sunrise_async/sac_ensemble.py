@@ -107,8 +107,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.reward_scale = reward_scale
         self.eval_statistics = OrderedDict()
         self.diagram_statistics = OrderedDict() ##
-        self.diagram_statistics['Policy_loss'] = [] ##
-        self.diagram_statistics['Log_pi'] = [] ##
+        self.diagram_statistics.update({'Policy_loss': []}) ##
+        self.diagram_statistics.update({'Log_pi': []}) ##
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
@@ -116,6 +116,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         std_Q_list = []
         # obs_sim = obs[:,:3]
         # obs_real = obs[:,3:]
+        print("obs shape ", obs)
         if self.feedback_type == 0 or self.feedback_type == 2:
             for en_index in range(self.num_ensemble):
                 with torch.no_grad():
@@ -318,10 +319,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.eval_statistics['Policy Loss'] = np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))
-            self.diagram_statistics['Policy_loss'] = self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
+            self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))) ##
-            self.diagram_statistics['Log_pi'] = self.diagram_statistics['Log_pi'].append(log_pi_list) ##
+            self.diagram_statistics['Log_pi'].append(log_pi_list) ##
 
             self.eval_statistics.update(create_stats_ordered_dict(
                 'Q1 Predictions',

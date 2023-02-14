@@ -68,7 +68,7 @@ def experiment(variant):
     NUM_ENSEMBLE = variant['num_ensemble']
     L_qf1, L_qf2, L_target_qf1, L_target_qf2, L_policy, L_eval_policy = [], [], [], [], [], []
 
-    client = None
+    client = Client()
     
     for _ in range(NUM_ENSEMBLE):
     
