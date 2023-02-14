@@ -192,7 +192,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
         # next_sim = next_obs[:,:3]
         # next_real = next_obs[:,3:]
-        log_pi_list = [] ##
+        # log_pi_list = [] ##
         
         for en_index in range(self.num_ensemble):
             mask = masks[:,en_index].reshape(-1, 1)
@@ -203,7 +203,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             new_obs_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy[en_index](
                 obs, reparameterize=True, return_log_prob=True,
             )
-            log_pi_list.append(log_pi) ##
+            # log_pi_list.append(log_pi) ##
 
             if self.use_automatic_entropy_tuning:
                 alpha_loss = -(self.log_alpha[en_index] * (log_pi + self.target_entropy).detach()) * mask
@@ -322,7 +322,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))) ##
-            self.diagram_statistics['Log_pi'].append(log_pi_list) ##
+            # self.diagram_statistics['Log_pi'].append(log_pi_list) ##
 
             self.eval_statistics.update(create_stats_ordered_dict(
                 'Q1 Predictions',
