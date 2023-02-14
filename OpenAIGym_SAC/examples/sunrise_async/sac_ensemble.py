@@ -172,6 +172,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         return std_Q_list
         
     def train_from_torch(self, batch_sim, batch_real):
+        torch.autograd.set_detect_anomaly(True)
         rewards = torch.cat((batch_sim['rewards'],batch_real['rewards']))
         terminals = torch.cat((batch_sim['terminals'], batch_real['terminals']))
         obs = torch.cat((batch_sim['observations'], batch_real['observations']))
