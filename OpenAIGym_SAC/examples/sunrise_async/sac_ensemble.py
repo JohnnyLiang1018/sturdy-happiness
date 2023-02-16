@@ -116,7 +116,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         std_Q_list = []
         # obs_sim = obs[:,:3]
         # obs_real = obs[:,3:]
-        print("obs shape ", obs)
+        # print("obs shape ", obs)
         if self.feedback_type == 0 or self.feedback_type == 2:
             for en_index in range(self.num_ensemble):
                 with torch.no_grad():
