@@ -212,7 +212,7 @@ def ensemble_rollout(
         masks.append(mask)
   
         path_length += 1
-        if d:
+        if d.any(): ##
             break
         o = next_o
         if render:
@@ -340,8 +340,12 @@ def ensemble_ucb_rollout(
 
     masks = [] # mask for bootstrapping
     # o = env.reset()
-    o_sim = [client.state_init[0], client.state_init[1]] ##
-    o_real = [client.state_init[2]] ##
+    # o_sim = [client.state_init[0], client.state_init[1]] ##
+    # o_real = [client.state_init[2]] ##
+    env_init = env.reset() ##
+    o_sim = [env_init[0], env_init[1]] ##
+    o_real = [env_init[2]] ##
+
     for en_index in range(num_ensemble):
         agent[en_index].reset()
     next_o = None
@@ -354,11 +358,11 @@ def ensemble_ucb_rollout(
     while path_length < max_path_length:
         a_max_sim, a_max_real, ucb_max_sim, ucb_max_real, agent_info_max_sim, agent_info_max_real = None, None, None, None, None, None
         l_a_sim, l_a_real = [], []
-        for env in o_sim:
+        for sub_env in o_sim:
             for en_index in range(num_sim):
                 # _a, agent_info = agent[en_index].get_action(o) 
-                _a_sim,  agent_info_sim = agent[en_index].get_action(env) 
-                ucb_score_sim = get_ucb_std(env, _a_sim, inference_type, critic1, critic2,
+                _a_sim,  agent_info_sim = agent[en_index].get_action(sub_env) 
+                ucb_score_sim = get_ucb_std(sub_env, _a_sim, inference_type, critic1, critic2,
                                     feedback_type, en_index, num_ensemble, num_sim,True)
             
                 if en_index == 0:
@@ -372,10 +376,10 @@ def ensemble_ucb_rollout(
                         agent_info_max_sim = agent_info_sim
             l_a_sim.append(a_max_sim)
 
-        for env in o_real:
+        for sub_env in o_real:
             for en_index in range(num_real):
-                _a_real, agent_info_real = agent[num_sim+en_index].get_action(env)
-                ucb_score_real = get_ucb_std(env, _a_real, inference_type, critic1, critic2,
+                _a_real, agent_info_real = agent[num_sim+en_index].get_action(sub_env)
+                ucb_score_real = get_ucb_std(sub_env, _a_real, inference_type, critic1, critic2,
                                     feedback_type, en_index, num_ensemble, num_real,False)
                 if en_index == 0:
                     a_max_real = _a_real
@@ -388,8 +392,8 @@ def ensemble_ucb_rollout(
                         agent_info_max_real = agent_info_real
             l_a_real.append(a_max_real)
 
-        # next_o, r, d, env_info = env.step(a_max)
-        next_o, r, d ,env_info = client.request(l_a_sim+l_a_real)
+        next_o, r, d, env_info = env.step(l_a_sim+l_a_real)
+        # next_o, r, d ,env_info = client.request(l_a_sim+l_a_real)
         next_o_sim_1, next_o_sim_2, next_o_real = next_o[0], next_o[1], next_o[2]
         if noise_flag == 1:
             r += np.random.normal(0,1,1)[0]

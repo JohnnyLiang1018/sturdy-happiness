@@ -189,6 +189,7 @@ class EnsembleMdpPathCollector(PathCollector):
                     max_path_length=max_path_length_this_loop,
                 )
             else:
+                print("inference", self.inference_type)
                 if self.inference_type > 0: # UCB
                     sim_1_path, sim_2_path, real_path = ensemble_ucb_rollout(
                         self.client,

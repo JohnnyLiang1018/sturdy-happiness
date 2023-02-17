@@ -6,6 +6,7 @@ from rlkit.envs.wrappers import NormalizedBoxEnv
 from rlkit.launchers.launcher_util import setup_logger_custom, set_seed
 from rlkit.samplers.data_collector import EnsembleMdpPathCollector
 from rlkit.torch.sac.policies import TanhGaussianPolicy, MakeDeterministic
+from examples.sunrise_async.VectorizedGym import VectorizedGym
 # from rlkit.torch.sac.neurips20_sac_ensemble import NeurIPS20SACEnsembleTrainer
 from examples.sunrise_async.sac_ensemble import NeurIPS20SACEnsembleTrainer
 from rlkit.torch.networks import FlattenMlp
@@ -56,8 +57,9 @@ def experiment(variant):
     # eval_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
     # obs_dim = expl_env.observation_space.low.size
     # action_dim = eval_env.action_space.low.size
-    expl_env = gym.make("Pendulum-v1")
-    eval_env = gym.make("Pendulum-v1")
+    expl_env = VectorizedGym()
+    expl_env_single = gym.make("Pendulum-v1")
+    eval_env = VectorizedGym()
     obs_dim = 3
     action_dim = 1
     
@@ -68,7 +70,8 @@ def experiment(variant):
     NUM_ENSEMBLE = variant['num_ensemble']
     L_qf1, L_qf2, L_target_qf1, L_target_qf2, L_policy, L_eval_policy = [], [], [], [], [], []
 
-    client = Client()
+    # client = Client()
+    client = None
     
     for _ in range(NUM_ENSEMBLE):
     
@@ -108,10 +111,15 @@ def experiment(variant):
     
     eval_path_collector = EnsembleMdpPathCollector(
         client,
-        eval_env,
-        L_eval_policy,
+        expl_env,
+        L_policy,
         NUM_ENSEMBLE,
+        ber_mean=variant['ber_mean'],
         eval_flag=False,
+        critic1=L_qf1,
+        critic2=L_qf2,
+        inference_type=variant['inference_type'],
+        feedback_type=1,
     )
     
     expl_path_collector = EnsembleMdpPathCollector(
@@ -129,14 +137,14 @@ def experiment(variant):
     
     replay_buffer_sim = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        expl_env,
+        expl_env_single,
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
 
     replay_buffer_real = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        expl_env,
+        expl_env_single,
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
@@ -219,5 +227,5 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True)
+    ptu.set_gpu_mode(True, False)
     experiment(variant)

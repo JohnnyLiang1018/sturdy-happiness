@@ -49,15 +49,20 @@ device = None
 _gpu_id = 0
 
 
-def set_gpu_mode(mode, gpu_id=0):
+def set_gpu_mode(mode, mac, gpu_id=0):
     global _use_gpu
     global device
     global _gpu_id
     _gpu_id = gpu_id
     _use_gpu = mode
-    # device = torch.device("cuda:" + str(gpu_id) if _use_gpu else "cpu")
-    device = torch.device("mps" if _use_gpu else "cpu")
-    # device = torch.device('cpu')
+    if _use_gpu: ##
+        if mac:
+            device = torch.device("mps")
+        else:
+            device = torch.device("cuda:" + str(gpu_id))
+    else:
+        device = torch.device("cpu") ##
+
 
 
 def gpu_enabled():
