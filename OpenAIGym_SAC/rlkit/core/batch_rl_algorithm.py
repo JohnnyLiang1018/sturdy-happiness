@@ -93,8 +93,8 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 print("start training")
                 for _ in range(self.num_trains_per_train_loop):
                     train_data_sim = self.replay_buffer.random_batch(
-                        self.batch_size - self.batch_size/3)
-                    train_data_real = self.replay_buffer_real.random_batch(self.batch_size/3)
+                        self.batch_size - round(self.batch_size/3))
+                    train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
                     self.trainer.train(train_data_sim,train_data_real)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)

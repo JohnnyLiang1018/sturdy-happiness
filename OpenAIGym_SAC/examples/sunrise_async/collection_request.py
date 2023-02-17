@@ -1,6 +1,6 @@
 from multiprocessing import dummy
 import requests
-from kafka import KafkaConsumer
+# from kafka import KafkaConsumer
 import base64
 import pickle
 from torch import onnx
@@ -69,14 +69,14 @@ class CollectionRequest():
         print(response)
         print(response.text)
 
-        consumer = KafkaConsumer(
-            self.topic,
-            bootstrap_servers=':9092',
-            group_id = "robot"
-        )
+        # consumer = KafkaConsumer(
+        #     self.topic,
+        #     bootstrap_servers=':9092',
+        #     group_id = "robot"
+        # )
 
         output = []
-        for message in consumer:
-            output.append(message.value)
+        # for message in consumer:
+        #     output.append(message.value)
 
         return output

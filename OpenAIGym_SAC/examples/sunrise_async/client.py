@@ -11,7 +11,7 @@ class Client(object):
         self.port = 4777 
 
         self.client_socket = socket.socket()
-        self.client_socket.connect(('10.250.19.92', self.port))
+        self.client_socket.connect((self.host, self.port))
         self.state_init = pickle.loads(self.client_socket.recv(1024))
         print(len(self.state_init))
         print(self.state_init[0])

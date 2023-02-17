@@ -217,10 +217,11 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 alpha_loss = 0
                 alpha = 1
 
-            q_new_actions = torch.min(
-                self.qf1[en_index](obs, new_obs_actions),
-                self.qf2[en_index](obs, new_obs_actions),
-            )
+            with torch.no_grad():
+                q_new_actions = torch.min(
+                    self.qf1[en_index](obs, new_obs_actions),
+                    self.qf2[en_index](obs, new_obs_actions),
+                )
             
             if self.feedback_type == 0 or self.feedback_type == 2:
                 std_Q = std_Q_actor_list[en_index]

@@ -56,8 +56,8 @@ def experiment(variant):
     # eval_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
     # obs_dim = expl_env.observation_space.low.size
     # action_dim = eval_env.action_space.low.size
-    expl_env = gym.make("Pendulum-v0")
-    eval_env = gym.make("Pendulum-v0")
+    expl_env = gym.make("Pendulum-v1")
+    eval_env = gym.make("Pendulum-v1")
     obs_dim = 3
     action_dim = 1
     
