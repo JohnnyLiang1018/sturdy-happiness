@@ -1,0 +1,13 @@
+name: python38
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python==3.8
+  - pytorch
+  - torchaudio
+  - torchvision
+  - gym
+  - matplotlib
+  - pyglet
+prefix: /opt/anaconda3/envs/python38
