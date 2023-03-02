@@ -345,8 +345,8 @@ def ensemble_ucb_rollout(
     # o_real = [client.state_init[2]] ##
     env_init = env.reset() ##
     print(env_init)
-    o_sim = [env_init[0][0], env_init[0][1]] ##
-    o_real = [env_init[0][2]] ##
+    o_sim = [env_init[0], env_init[1]] ##
+    o_real = [env_init[2]] ##
 
     for en_index in range(num_ensemble):
         agent[en_index].reset()
