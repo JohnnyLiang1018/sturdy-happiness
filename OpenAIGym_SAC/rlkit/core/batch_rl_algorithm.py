@@ -4,7 +4,7 @@ import gtimer as gt
 from rlkit.core.rl_algorithm import BaseRLAlgorithm
 from rlkit.data_management.replay_buffer import ReplayBuffer
 from rlkit.samplers.data_collector import PathCollector
-
+import matplotlib.pyplot as plt
 
 class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
     def __init__(
@@ -64,16 +64,24 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             self.replay_buffer_real.add_paths(init_expl_paths_real)
             self.expl_data_collector.end_epoch(-1)
 
+        r_avg = [] ##
         for epoch in gt.timed_for(
                 range(self._start_epoch, self.num_epochs),
                 save_itrs=True,
         ):
             print("start eval collector")
+            # self.eval_data_collector.collect_new_paths(
+            #     self.max_path_length,
+            #     self.num_eval_steps_per_epoch,
+            #     discard_incomplete_paths=True,
+            # )
             self.eval_data_collector.collect_new_paths(
                 self.max_path_length,
                 self.num_eval_steps_per_epoch,
                 discard_incomplete_paths=True,
             )
+            r_sum = self.eval_data_collector.reward_eval()
+            r_avg.append(r_sum) ##
             print("end eval collector")
             gt.stamp('evaluation sampling')
 
@@ -104,3 +112,5 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 if epoch % self.save_frequency == 0:
                     self.trainer.save_models(epoch)
                     self.replay_buffer.save_buffer(epoch)
+        plt.plot(r_avg)
+        plt.show()

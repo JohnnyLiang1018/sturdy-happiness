@@ -52,17 +52,16 @@ class CollectionRequest():
         # torch_model = SuperResolutionNet(upscale_factor=3)
         # torch_model.eval()
         # dummy_input = torch.Tensor(env.reset())
-        agents[0].eval()
         dummy_input = torch.randn(3, requires_grad=True)
         print(dummy_input)
-        torch.onnx.export(agents[0],dummy_input, "agent.onnx", verbose=True)
         # torch.onnx.export(torch_model, dummy_input, "alexnet.onnx", verbose=True)
 
-        # for agent in agents:
-        #     torch.onnx.export(agent, dummy_input, "agent.onnx", verbose=True)
-            # encode_byte = base64.b64encode(pickle.dumps(agent))
-            # encode_string = encode_byte.decode("ascii")
-            # models.append(encode_string)
+        for agent in agents:
+            torch.onnx.export(agent, dummy_input, "agent.onnx", verbose=True)
+            with open('agent.onnx','rb') as handle:
+                encode_byte = base64.b64encode(handle.read())
+            encode_string = encode_byte.decode("ascii")
+            models.append(encode_string)
         json = {"numEnsemble": numEnsemble, "policy": models, "iteration": iteration}
         response = requests.post(self.server_url,json=json)
         self.topic = response.text

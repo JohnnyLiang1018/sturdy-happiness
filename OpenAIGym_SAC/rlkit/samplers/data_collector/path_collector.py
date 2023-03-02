@@ -1,10 +1,11 @@
 from collections import deque, OrderedDict
 
 from rlkit.core.eval_util import create_stats_ordered_dict
-from rlkit.samplers.rollout_functions import rollout, multitask_rollout, ensemble_rollout, ensemble_eval_rollout
+from rlkit.samplers.rollout_functions import rollout, multitask_rollout, ensemble_rollout
 # from rlkit.samplers.rollout_functions import ensemble_ucb_rollout
-from rlkit.samplers.rollout import ensemble_ucb_rollout, ensemble_real_rollout
+from rlkit.samplers.rollout import ensemble_ucb_rollout, ensemble_real_rollout, ensemble_eval_rollout, ensemble_eval
 from rlkit.samplers.data_collector.base import PathCollector
+import gym
 
 class MdpPathCollector(PathCollector):
     def __init__(
@@ -145,7 +146,8 @@ class EnsembleMdpPathCollector(PathCollector):
     ):
         if render_kwargs is None:
             render_kwargs = {}
-        self.client = client
+        self.client = client ##
+        self.eval_env = gym.make("Pendulum-v1") ##
         self._env = env
         self._policy = policy
         self._max_num_epoch_paths_saved = max_num_epoch_paths_saved
@@ -181,15 +183,13 @@ class EnsembleMdpPathCollector(PathCollector):
                 num_steps - num_steps_collected,
             )
             if self.eval_flag:
-                print("eval")
                 path = ensemble_eval_rollout(
-                    self._env,
+                    self.eval_env,
                     self._policy,
                     self.num_ensemble,
                     max_path_length=max_path_length_this_loop,
                 )
             else:
-                print("inference", self.inference_type)
                 if self.inference_type > 0: # UCB
                     sim_1_path, sim_2_path, real_path = ensemble_ucb_rollout(
                         self.client,
@@ -286,6 +286,10 @@ class EnsembleMdpPathCollector(PathCollector):
         self._epoch_paths.extend(paths_real)    
 
         return paths_sim, paths_real
+    
+    def reward_eval(self):
+        r_sum = ensemble_eval(self.eval_env, self._policy, self.num_ensemble, max_path_length=20)
+        return r_sum
 
     def get_epoch_paths(self):
         return self._epoch_paths

@@ -170,7 +170,6 @@ def list_of_dicts__to__dict_of_lists(lst):
             if key in output_dict.keys():
                 output_dict[key].append(d[key])
             else:
-                print("key", key, "d", d)
                 output_dict[key] = [d[key]]
     return output_dict
 

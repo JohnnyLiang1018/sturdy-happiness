@@ -72,7 +72,6 @@ class Mlp(nn.Module):
             h = self.hidden_activation(h)
         preactivation = self.last_fc(h)
         output = self.output_activation(preactivation)
-        # print("debug ", preactivation, output, return_preactivations)
         if return_preactivations:
             return output, preactivation
         else:

@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<mujoco model="sphere">
+    <default>
+        <joint armature="0.1" damping="1" limited="true"/>
+        <geom friction="1 0.1 0.1" density="1000"/>
+    </default>
+
+    <option timestep="0.01"/>
+
+    <worldbody>
+        <body name="sphere" pos="0 0 1">
+            <geom type="sphere" size="0.1" rgba="1 0 0 1"/>
+        </body>
+    </worldbody>
+
+    <actuator>
+        <!-- <motor gear="150" /> -->
+    </actuator>
+
+</mujoco>

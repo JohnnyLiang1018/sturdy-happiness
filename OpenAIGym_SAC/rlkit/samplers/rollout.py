@@ -1,3 +1,4 @@
+from statistics import mean
 import numpy as np
 import torch 
 from rlkit.torch import pytorch_util as ptu
@@ -568,6 +569,42 @@ def ensemble_real_rollout(
         agent_infos=agent_infos,
         env_infos=env_infos,
     )
+def ensemble_eval(
+    env,
+    agent,
+    num_ensemble,
+    max_path_length=np.inf,
+    render=False,
+    render_kwargs=None,
+):
+    if render_kwargs is None:
+        render_kwargs = {}
+    r_sum = 0
+    o = env.reset()
+    for en_index in range(num_ensemble):
+        agent[en_index].reset()
+    next_o = None
+    path_length = 0
+    if render:
+        env.render(**render_kwargs)
+    while path_length < max_path_length:
+        a = None
+        for en_index in range(num_ensemble):
+            _a, agent_info = agent[en_index].get_action(o)
+            if en_index == 0:
+                a = _a
+            else:
+                a += _a
+        a = a / num_ensemble
+        next_o, r, d, env_info = env.step(a)
+        r_sum += r
+        path_length += 1
+        if d:
+            break
+        o = next_o
+        if render:
+            env.render(**render_kwargs)
+    return r_sum
 
 
 def ensemble_eval_rollout(
@@ -651,4 +688,5 @@ def ensemble_eval_rollout(
         terminals=np.array(terminals).reshape(-1, 1),
         agent_infos=agent_infos,
         env_infos=env_infos,
-    )
+    ), mean(rewards)
+
