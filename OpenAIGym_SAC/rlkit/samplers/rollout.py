@@ -344,6 +344,7 @@ def ensemble_ucb_rollout(
     # o_sim = [client.state_init[0], client.state_init[1]] ##
     # o_real = [client.state_init[2]] ##
     env_init = env.reset() ##
+    print(env_init)
     o_sim = [env_init[0], env_init[1]] ##
     o_real = [env_init[2]] ##
 

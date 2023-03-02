@@ -15,6 +15,7 @@ from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 import gym
 from examples.sunrise_async.client import Client
 import pickle
+import sys
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -228,4 +229,5 @@ if __name__ == "__main__":
             
     variant['log_dir'] = log_dir
     ptu.set_gpu_mode(True, False)
+    print(sys.version)
     experiment(variant)
