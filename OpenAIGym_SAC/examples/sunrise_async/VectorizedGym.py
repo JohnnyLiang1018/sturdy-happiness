@@ -19,8 +19,8 @@ class VectorizedGym(gym.Env):
         a_sim = [[float(actions[0])]]
         a_real = [[float(actions[1])]]
         a = np.asarray(a_sim*self.num_sim+a_real*self.num_real)
-        obs,reward,done,info = self.envs.step(a)
-        return obs,reward,done,info
+        obs,reward,termination,truncation,info = self.envs.step(a)
+        return obs,reward,termination,info
 
     def reset(self):
         return self.envs.reset()
