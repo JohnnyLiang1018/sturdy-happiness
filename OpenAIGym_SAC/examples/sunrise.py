@@ -61,8 +61,10 @@ def experiment(variant):
     expl_env = VectorizedGym()
     expl_env_single = gym.make("Pendulum-v1")
     eval_env = VectorizedGym()
-    obs_dim = 5
-    action_dim = 2
+    obs_dim = 3
+    action_dim = 1
+    ## obs_dim = 5
+    ## action_dim = 3
     
     M = variant['layer_size']
     num_layer = variant['num_layer']
