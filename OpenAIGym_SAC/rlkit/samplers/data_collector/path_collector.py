@@ -147,7 +147,6 @@ class EnsembleMdpPathCollector(PathCollector):
         if render_kwargs is None:
             render_kwargs = {}
         self.client = client ##
-        self.eval_env = gym.make("Pendulum-v1") ##
         self._env = env
         self._policy = policy
         self._max_num_epoch_paths_saved = max_num_epoch_paths_saved
@@ -184,7 +183,7 @@ class EnsembleMdpPathCollector(PathCollector):
             )
             if self.eval_flag:
                 path = ensemble_eval_rollout(
-                    self.eval_env,
+                    self._env,
                     self._policy,
                     self.num_ensemble,
                     max_path_length=max_path_length_this_loop,
@@ -288,7 +287,7 @@ class EnsembleMdpPathCollector(PathCollector):
         return paths_sim, paths_real
     
     def reward_eval(self):
-        r_sum = ensemble_eval(self.eval_env, self._policy, self.num_ensemble, max_path_length=1000)
+        r_sum = ensemble_eval(self._env, self._policy, self.num_ensemble, max_path_length=1000)
         return r_sum
 
     def get_epoch_paths(self):

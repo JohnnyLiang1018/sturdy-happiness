@@ -10,6 +10,7 @@ from rlkit.core.eval_util import create_stats_ordered_dict
 from rlkit.torch.torch_rl_algorithm import TorchTrainer
 
 from rlkit.samplers.rollout import ensemble_eval
+import gym
 
 
 class NeurIPS20SACEnsembleTrainer(TorchTrainer):
@@ -45,6 +46,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
     ):
         super().__init__()
         self.env = env
+        self.eval_env = gym.make("Pendulum-v1") ##
         self.policy = policy
         self.qf1 = qf1
         self.qf2 = qf2
@@ -328,7 +330,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 tot_policy_loss
             ))) ##
 
-            r_sum = ensemble_eval(self.env, self.policy, self.num_ensemble, max_path_length=100) ##
+            r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
             self.diagram_statistics['R_sum'].append(r_sum) ##
 
             # self.diagram_statistics['Log_pi'].append(log_pi_list) ##
