@@ -1,6 +1,6 @@
 from multiprocessing import dummy
 import requests
-# from kafka import KafkaConsumer
+from kafka import KafkaConsumer
 import base64
 import pickle
 from torch import onnx
@@ -10,6 +10,7 @@ import numpy as np
 
 import torch.nn as nn
 import torch.nn.init as init
+import ast
 
 
 class SuperResolutionNet(nn.Module):
@@ -53,7 +54,6 @@ class CollectionRequest():
         # torch_model.eval()
         # dummy_input = torch.Tensor(env.reset())
         dummy_input = torch.randn(3, requires_grad=True)
-        print(dummy_input)
         # torch.onnx.export(torch_model, dummy_input, "alexnet.onnx", verbose=True)
 
         for agent in agents:
@@ -68,14 +68,28 @@ class CollectionRequest():
         print(response)
         print(response.text)
 
-        # consumer = KafkaConsumer(
-        #     self.topic,
-        #     bootstrap_servers=':9092',
-        #     group_id = "robot"
-        # )
+        consumer = KafkaConsumer(
+            self.topic,
+            bootstrap_servers=':9092',
+            group_id = "robot"
+        )
 
-        output = []
-        # for message in consumer:
-        #     output.append(message.value)
+        states = []
+        actions = []
+        count = 0
+        for message in consumer:
+            ## index 0, id
+            ## index 1, state list
+            ## index 2, action list
+            ## index 3, iteration
+            reading = ast.literal_eval(str(message.value, 'utf-8'))
+            print(reading)
+            states.extend(reading[1])
+            actions.extend(reading[2])
+            print(states)
+            print(actions)
+            count += int(reading[3])
+            if count > iteration:
+                break
 
-        return output
+        return states, actions

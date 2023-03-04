@@ -509,6 +509,7 @@ def ensemble_real_rollout(
         env,
         agent,
         num_ensemble,
+        num_step,
         max_path_length=np.inf,
 ):
 
@@ -524,29 +525,29 @@ def ensemble_real_rollout(
     next_o = None
     path_length = 0
     client = CollectionRequest()
-    output = client.request(agent,env,1,100)
-    print(output)
+    observations, actions = client.request(agent,env,1,max_path_length,num_step)
 
-    while path_length < max_path_length:
-        a = None
-        for en_index in range(num_ensemble):
-            _a, agent_info = agent[en_index].get_action(o)
-            if en_index == 0:
-                a = _a
-            else:
-                a += _a
-        a = a / num_ensemble
-        next_o, r, d, env_info = env.step(a)
-        observations.append(o)
-        rewards.append(r)
-        terminals.append(d)
-        actions.append(a)
-        agent_infos.append(agent_info)
-        env_infos.append(env_info)
-        path_length += 1
-        if d:
-            break
-        o = next_o
+
+    # while path_length < max_path_length:
+    #     a = None
+    #     for en_index in range(num_ensemble):
+    #         _a, agent_info = agent[en_index].get_action(o)
+    #         if en_index == 0:
+    #             a = _a
+    #         else:
+    #             a += _a
+    #     a = a / num_ensemble
+    #     next_o, r, d, env_info = env.step(a)
+    #     observations.append(o)
+    #     rewards.append(r)
+    #     terminals.append(d)
+    #     actions.append(a)
+    #     agent_infos.append(agent_info)
+    #     env_infos.append(env_info)
+    #     path_length += 1
+    #     if d:
+    #         break
+    #     o = next_o
 
     actions = np.array(actions)
     if len(actions.shape) == 1:
@@ -590,13 +591,14 @@ def ensemble_eval(
         env.render(**render_kwargs)
     while path_length < max_path_length:
         a = None
-        for en_index in range(num_ensemble):
-            _a, agent_info = agent[en_index].get_action(o)
-            if en_index == 0:
-                a = _a
-            else:
-                a += _a
-        a = a / num_ensemble
+        # for en_index in range(num_ensemble):
+        #     _a, agent_info = agent[en_index].get_action(o)
+        #     if en_index == 0:
+        #         a = _a
+        #     else:
+        #         a += _a
+        # a = a / num_ensemble
+        a, agent_info = agent[np.random.randint(0,num_ensemble)].get_action(o)
         next_o, r, d, env_info = env.step(a)
         r_sum += r
         path_length += 1

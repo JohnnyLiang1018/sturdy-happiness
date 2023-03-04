@@ -288,7 +288,7 @@ class EnsembleMdpPathCollector(PathCollector):
         return paths_sim, paths_real
     
     def reward_eval(self):
-        r_sum = ensemble_eval(self.eval_env, self._policy, self.num_ensemble, max_path_length=20)
+        r_sum = ensemble_eval(self.eval_env, self._policy, self.num_ensemble, max_path_length=1000)
         return r_sum
 
     def get_epoch_paths(self):

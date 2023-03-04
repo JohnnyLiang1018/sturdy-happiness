@@ -6,9 +6,9 @@ class VectorizedGym(gym.Env):
 
     def __init__(self):
         self.envs = gym.vector.SyncVectorEnv([
-            lambda: gym.make("Pendulum-v1", g=9.9),
-            lambda: gym.make("Pendulum-v1", g=9.7),
-            lambda: gym.make("Pendulum-v1", g=9.81)
+            lambda: gym.make("Pendulum-v1"),
+            lambda: gym.make("Pendulum-v1"),
+            lambda: gym.make("Pendulum-v1")
         ])
         self.num_sim = 2
         self.num_real = 1

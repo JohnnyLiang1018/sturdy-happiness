@@ -9,6 +9,8 @@ import rlkit.torch.pytorch_util as ptu
 from rlkit.core.eval_util import create_stats_ordered_dict
 from rlkit.torch.torch_rl_algorithm import TorchTrainer
 
+from rlkit.samplers.rollout import ensemble_eval
+
 
 class NeurIPS20SACEnsembleTrainer(TorchTrainer):
     def __init__(
@@ -109,6 +111,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.diagram_statistics = OrderedDict() ##
         self.diagram_statistics.update({'Policy_loss': []}) ##
         self.diagram_statistics.update({'Log_pi': []}) ##
+        self.diagram_statistics.update({'R_sum': []}) ##
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
@@ -324,6 +327,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))) ##
+
+            r_sum = ensemble_eval(self.env, self.policy, self.num_ensemble, max_path_length=100) ##
+            self.diagram_statistics['R_sum'].append(r_sum) ##
+
             # self.diagram_statistics['Log_pi'].append(log_pi_list) ##
 
             self.eval_statistics.update(create_stats_ordered_dict(

@@ -80,8 +80,8 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 self.num_eval_steps_per_epoch,
                 discard_incomplete_paths=True,
             )
-            r_sum = self.eval_data_collector.reward_eval()
-            r_avg.append(r_sum) ##
+            # r_sum = self.eval_data_collector.reward_eval()
+            # r_avg.append(r_sum) ##
             print("end eval collector")
             gt.stamp('evaluation sampling')
 
