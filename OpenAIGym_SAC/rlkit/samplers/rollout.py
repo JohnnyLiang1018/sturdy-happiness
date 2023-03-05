@@ -583,8 +583,8 @@ def ensemble_eval(
         render_kwargs = {}
     r_sum = 0
     o = env.reset()
-    for en_index in range(num_ensemble):
-        agent[en_index].reset()
+    # for en_index in range(num_ensemble):
+    #     agent[en_index].reset()
     next_o = None
     path_length = 0
     if render:
@@ -607,7 +607,8 @@ def ensemble_eval(
         o = next_o
         if render:
             env.render(**render_kwargs)
-    return r_sum
+    print("avg reward", r_sum/path_length)
+    return r_sum/path_length
 
 
 def ensemble_eval_rollout(

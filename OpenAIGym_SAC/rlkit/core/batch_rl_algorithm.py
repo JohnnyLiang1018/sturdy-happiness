@@ -64,7 +64,6 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             self.replay_buffer_real.add_paths(init_expl_paths_real)
             self.expl_data_collector.end_epoch(-1)
 
-        r_avg = [] ##
         for epoch in gt.timed_for(
                 range(self._start_epoch, self.num_epochs),
                 save_itrs=True,
@@ -80,8 +79,6 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 self.num_eval_steps_per_epoch,
                 discard_incomplete_paths=True,
             )
-            # r_sum = self.eval_data_collector.reward_eval()
-            # r_avg.append(r_sum) ##
             print("end eval collector")
             gt.stamp('evaluation sampling')
 
@@ -112,5 +109,3 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 if epoch % self.save_frequency == 0:
                     self.trainer.save_models(epoch)
                     self.replay_buffer.save_buffer(epoch)
-        plt.plot(r_avg)
-        plt.show()
