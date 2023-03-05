@@ -4,5 +4,5 @@ import pickle
 with open('stat_hpc3.pickle', 'rb') as handle:
     stat = pickle.load(handle)
 
-plt.plot(stat['Policy_loss'])
+plt.plot(stat['R_sum'])
 plt.show()
