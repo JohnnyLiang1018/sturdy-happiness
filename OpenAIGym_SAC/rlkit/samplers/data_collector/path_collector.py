@@ -158,7 +158,7 @@ class EnsembleMdpPathCollector(PathCollector):
         self.ber_mean = ber_mean
         self.critic1 = critic1
         self.critic2 = critic2
-        self.inference_type = inference_type
+        self.inference_type = -1
         self.feedback_type = feedback_type
         self._noise_flag = noise_flag
         
@@ -230,12 +230,20 @@ class EnsembleMdpPathCollector(PathCollector):
                         paths_real.append(sim_2_path)
 
                 elif self.inference_type == -1:
-                    path = ensemble_real_rollout(
+                    path_real = ensemble_real_rollout(
                         self._env,
                         self._policy,
                         self.num_ensemble,
                         max_path_length_this_loop
                     )
+
+                    path_sim = ensemble_ucb_rollout(
+
+                    )
+                    self._num_paths_total += len(paths)
+                    self._num_paths_total += len(paths)
+                    self._num_steps_total += num_steps
+                    self._epoch_paths.extend(paths)
 
                     return path
 
