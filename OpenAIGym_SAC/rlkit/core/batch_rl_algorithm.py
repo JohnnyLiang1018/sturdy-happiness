@@ -64,6 +64,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             self.replay_buffer_real.add_paths(init_expl_paths_real)
             self.expl_data_collector.end_epoch(-1)
 
+        count = 0 ##
         for epoch in gt.timed_for(
                 range(self._start_epoch, self.num_epochs),
                 save_itrs=True,
@@ -81,6 +82,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             )
             print("end eval collector")
             gt.stamp('evaluation sampling')
+            
 
             for _ in range(self.num_train_loops_per_epoch):
                 new_expl_paths_sim, new_expl_paths_real = self.expl_data_collector.collect_new_paths(
@@ -96,11 +98,17 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
 
                 self.training_mode(True)
                 print("start training")
-                for _ in range(self.num_trains_per_train_loop):
-                    train_data_sim = self.replay_buffer.random_batch(
-                        self.batch_size - round(self.batch_size/3))
+                if count > self.num_epochs / 2:
+                    train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
                     train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
-                    self.trainer.train(train_data_sim,train_data_real)
+                    tuning = True
+                else:
+                    train_data_sim = self.replay_buffer.random_batch(self.batch_size)
+                    train_data_real = self.replay_buffer_real.random_batch(self.batch_size)
+                    tuning = False
+
+                for _ in range(self.num_trains_per_train_loop):
+                    self.trainer.train_exp(train_data_sim,train_data_real,tuning)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
 

@@ -10,7 +10,7 @@ import numpy as np
 
 import torch.nn as nn
 import torch.nn.init as init
-import ast
+import base64
 
 
 class SuperResolutionNet(nn.Module):
@@ -76,19 +76,19 @@ class CollectionRequest():
 
         states = []
         actions = []
+        terminals = []
         count = 0
         for message in consumer:
-            ## index 0, id
-            ## index 1, state list
-            ## index 2, action list
-            ## index 3, iteration
-            reading = ast.literal_eval(str(message.value, 'utf-8'))
-            print(reading)
-            states.extend(reading[1])
-            actions.extend(reading[2])
+            reading = base64.b64decode(message.value)
+            json = pickle.loads(reading)
+
+            states.extend(json['state'])
+            actions.extend(json['action'])
+            terminals.extend(json['done'])
+            size = json['size']
             print(states)
             print(actions)
-            count += int(reading[3])
+            count += int(size)
             if count > iteration:
                 break
 

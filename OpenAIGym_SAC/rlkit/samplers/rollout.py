@@ -525,7 +525,7 @@ def ensemble_real_rollout(
     next_o = None
     path_length = 0
     client = CollectionRequest()
-    observations, actions = client.request(agent,env,1,max_path_length,num_step)
+    observations, actions = client.request(agent,env,1,1,10)
 
 
     # while path_length < max_path_length:
