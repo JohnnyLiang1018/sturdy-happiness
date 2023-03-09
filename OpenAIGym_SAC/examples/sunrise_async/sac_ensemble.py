@@ -201,7 +201,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 std_Q_list.append(torch.sqrt(var_Q).detach())
                 
         elif self.feedback_type == 1 or self.feedback_type == 3:
-            mean_Q, var_Q = None, None, None
+            mean_Q, var_Q = None, None
             # L_target_Q = []
             
             if is_sim:
@@ -229,7 +229,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                         target_Q2 = self.target_qf2[en_index](obs, policy_action)
                     # L_target_Q.append(target_Q1)
                     # L_target_Q.append(target_Q2)
-                    if en_index == 0:
+                    if en_index == r_target.start:
                         mean_Q = 0.5*(target_Q1 + target_Q2) / self.num_ensemble
                     else:
                         mean_Q += 0.5*(target_Q1 + target_Q2) / self.num_ensemble
@@ -666,7 +666,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))) ##
-            self.diagram_statistics['Weight_actor_q'].append(ptu.get_numpy(weight_actor_Q)) ##
+            self.diagram_statistics['Weight_actor_q'].append(weight_actor_Q) ##
 
             r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
             self.diagram_statistics['R_sum'].append(r_sum) ##

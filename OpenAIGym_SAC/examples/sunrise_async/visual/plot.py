@@ -7,4 +7,4 @@ with open('stat_baseline.pickle', 'rb') as handle:
 plt.plot(stat['Policy_loss'])
 plt.show()
 
-# print(len(stat['Std_q'][0]))
+# print(len(stat['Weight_actor_q']))

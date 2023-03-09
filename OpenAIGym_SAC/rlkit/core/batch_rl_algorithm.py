@@ -111,7 +111,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                     self.trainer.train_exp(train_data_sim,train_data_real,tuning)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
-                count += 1
+            count += 1
 
             self._end_epoch(epoch)
             if self.save_frequency > 0:
