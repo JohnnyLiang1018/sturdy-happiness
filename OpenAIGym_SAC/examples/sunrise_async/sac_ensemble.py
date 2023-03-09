@@ -116,7 +116,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.diagram_statistics.update({'Policy_loss': []}) ##
         self.diagram_statistics.update({'Log_pi': []}) ##
         self.diagram_statistics.update({'R_sum': []}) ##
-        self.diagram_statistics.update({'Std_q': []}) ##
+        self.diagram_statistics.update({'Weight_actor_q': []}) ##
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
@@ -174,6 +174,91 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     var_Q += (L_target_Q[i].detach() - mean_Q)**2
                 temp_count += 1
             var_Q = var_Q / temp_count
+            std_Q_list.append(torch.sqrt(var_Q).detach())
+            # std_Q_list[-1] = torch.tensor(1.0) ##
+
+        return std_Q_list
+    
+    def corrective_feedback_exp(self, obs, update_type, is_sim):
+        std_Q_list = []
+        # obs_sim = obs[:,:3]
+        # obs_real = obs[:,3:]
+        # print("obs shape ", obs)
+        if self.feedback_type == 0 or self.feedback_type == 2:
+            for en_index in range(self.num_ensemble):
+                with torch.no_grad():
+                    policy_action, _, _, _, *_ = self.policy[en_index](
+                        obs, reparameterize=True, return_log_prob=True,
+                    )
+                    if update_type == 0:
+                        actor_Q1 = self.qf1[en_index](obs, policy_action)
+                        actor_Q2 = self.qf2[en_index](obs, policy_action)
+                    else:
+                        actor_Q1 = self.target_qf1[en_index](obs, policy_action)
+                        actor_Q2 = self.target_qf2[en_index](obs, policy_action)
+                    mean_actor_Q= 0.5*(actor_Q1 + actor_Q2)
+                    var_Q = 0.5*((actor_Q1 - mean_actor_Q)**2 + (actor_Q2 - mean_actor_Q)**2)
+                std_Q_list.append(torch.sqrt(var_Q).detach())
+                
+        elif self.feedback_type == 1 or self.feedback_type == 3:
+            mean_Q, var_Q = None, None, None
+            # L_target_Q = []
+            
+            if is_sim:
+                ## Sim agent will compute mean Q from the real agent ensemble
+                ## and calculate variance for each sim agent
+                r = range(self.num_sim)
+                r_target = range(self.num_sim, self.num_ensemble)
+
+            else:
+                ## Real agent's weight is the same as the sunrise approach
+                r = range(self.num_sim, self.num_ensemble)
+                r_target = range(self.num_sim, self.num_ensemble)
+
+            for en_index in r_target:
+                with torch.no_grad():
+                    policy_action, _, _, _, *_ = self.policy[en_index](
+                        obs, reparameterize=True, return_log_prob=True,
+                    )  ## policy action from sim environment?
+                    
+                    if update_type == 0: # actor
+                        target_Q1 = self.qf1[en_index](obs, policy_action)
+                        target_Q2 = self.qf2[en_index](obs, policy_action)
+                    else: # critic
+                        target_Q1 = self.target_qf1[en_index](obs, policy_action)
+                        target_Q2 = self.target_qf2[en_index](obs, policy_action)
+                    # L_target_Q.append(target_Q1)
+                    # L_target_Q.append(target_Q2)
+                    if en_index == 0:
+                        mean_Q = 0.5*(target_Q1 + target_Q2) / self.num_ensemble
+                    else:
+                        mean_Q += 0.5*(target_Q1 + target_Q2) / self.num_ensemble
+
+
+
+            temp_count = 0
+            for en_index in r:
+                policy_action, _, _, _, *_ = self.policy[en_index](
+                    obs, reparameterize=True, return_log_prob=True,
+                )  ## policy action from sim environment?
+                    
+                if update_type == 0: # actor
+                    target_Q1 = self.qf1[en_index](obs, policy_action)
+                    target_Q2 = self.qf2[en_index](obs, policy_action)
+                else: # critic
+                    target_Q1 = self.target_qf1[en_index](obs, policy_action)
+                    target_Q2 = self.target_qf2[en_index](obs, policy_action)
+
+                if temp_count == 0:
+                    ## var_Q = (target_Q.detach() - mean_Q)**2
+                    var_Q = (target_Q1.detach() - mean_Q)**2
+                    var_Q += (target_Q2.detach() - mean_Q)**2
+                else:
+                    ## var_Q += (target_Q.detach() - mean_Q)**2
+                    var_Q += (target_Q1.detach() - mean_Q)**2
+                    var_Q += (target_Q2.detach() - mean_Q)**2
+                temp_count += 1
+            var_Q = var_Q / (temp_count*2)
             std_Q_list.append(torch.sqrt(var_Q).detach())
             # std_Q_list[-1] = torch.tensor(1.0) ##
 
@@ -378,9 +463,11 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             next_obs = torch.cat((batch_sim['next_observations'], batch_real['next_observations']))
             masks = torch.cat((batch_sim['masks'], batch_real['masks']))
 
-            std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0)
-            std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1)
-        
+            std_Q_actor_list_sim = self.corrective_feedback_exp(obs=obs, update_type=0,is_sim=True)
+            std_Q_actor_list_real = self.corrective_feedback_exp(obs=obs, update_type=0,is_sim=False)
+            std_Q_critic_list_sim = self.corrective_feedback_exp(obs=next_obs, update_type=1, is_sim=True)
+            std_Q_critic_list_real = self.corrective_feedback_exp(obs=next_obs, update_type=1, is_sim=False)
+
         else:
             rewards_sim = batch_sim['rewards']
             rewards_real = batch_real['rewards']
@@ -440,6 +527,16 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     masks = mask_real
                     std_Q_actor_list = std_Q_actor_list_real
                     std_Q_critic_list = std_Q_critic_list_real
+
+            else:
+                if en_index < self.num_sim:
+                    std_Q_actor_list = std_Q_actor_list_sim
+                    std_Q_critic_list = std_Q_critic_list_sim
+
+                else:
+                    std_Q_actor_list = std_Q_actor_list_real
+                    std_Q_critic_list = std_Q_critic_list_real
+
             
             mask = masks[:,en_index].reshape(-1, 1)
 
@@ -569,7 +666,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))) ##
-            self.diagram_statistics['Std_q'].append(ptu.get_numpy(std_Q)) ##
+            self.diagram_statistics['Weight_actor_q'].append(ptu.get_numpy(weight_actor_Q)) ##
 
             r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
             self.diagram_statistics['R_sum'].append(r_sum) ##
