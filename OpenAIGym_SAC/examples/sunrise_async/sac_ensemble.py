@@ -573,7 +573,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             else:
                 std_Q = std_Q_actor_list[0]
 
-            print("Actor temp",self.temperature_act)
+            # print("Actor temp",self.temperature_act)
             if tuning == False:
                 weight_actor_Q = 0.5
             
@@ -581,7 +581,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 weight_actor_Q = (torch.sigmoid(-std_Q*self.temperature_act) + 0.5).detach()
             else:
                 weight_actor_Q = (2*torch.sigmoid(-std_Q*self.temperature_act)).detach()
-            print("Weight_actor_Q", weight_actor_Q)
+            # print("Weight_actor_Q", weight_actor_Q)
             policy_loss = (alpha*log_pi - q_new_actions - self.expl_gamma * std_Q) * mask * weight_actor_Q
             policy_loss = policy_loss.sum() / (mask.sum() + 1)
 
@@ -676,7 +676,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))) ##
-            self.diagram_statistics['Weight_actor_q'].append(weight_actor_Q) ##
+            self.diagram_statistics['Weight_actor_q'].append(np.mean(ptu.get_numpy(weight_actor_Q))) ##
 
             r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
             self.diagram_statistics['R_sum'].append(r_sum) ##

@@ -108,7 +108,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                     tuning = False
 
                 for _ in range(self.num_trains_per_train_loop):
-                    self.trainer.train_exp(train_data_sim,train_data_real)
+                    self.trainer.train_exp(train_data_sim,train_data_real,tuning)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
             count += 1
