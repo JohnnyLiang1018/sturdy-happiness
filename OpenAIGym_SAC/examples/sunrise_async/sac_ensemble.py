@@ -599,7 +599,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             ) - alpha * new_log_pi
 
             if tuning != True:
-                std_Q_critic_list = std_Q_critic_list * 0
+                std_Q_critic_list = [x * 0 for x in std_Q_critic_list]
             
             if self.feedback_type == 0 or self.feedback_type == 2:
                 if self.feedback_type == 0:
