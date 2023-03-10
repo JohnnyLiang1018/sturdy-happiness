@@ -290,7 +290,6 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         # log_pi_list = [] ##
         
         for en_index in range(self.num_ensemble):
-            print("en_index",en_index)
             mask = masks[:,en_index].reshape(-1, 1)
 
             """
