@@ -184,7 +184,7 @@ def experiment(variant):
     
     algorithm.to(ptu.device)
     algorithm.train()
-    with open('stat_baseline.pickle','wb') as handle:
+    with open('stat_stable.pickle','wb') as handle:
         pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
     # pickle.dumps(L_policy[0])
     # print("success")
@@ -200,7 +200,7 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=200,
+            num_epochs=100,
             num_eval_steps_per_epoch=1000,
             num_trains_per_train_loop=1000,
             num_expl_steps_per_train_loop=1000,

@@ -116,7 +116,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.diagram_statistics.update({'Policy_loss': []}) ##
         self.diagram_statistics.update({'Log_pi': []}) ##
         self.diagram_statistics.update({'R_sum': []}) ##
-        self.diagram_statistics.update({'Weight_actor_q': []}) ##
+        self.diagram_statistics.update({'Weight': []}) ##
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
@@ -297,7 +297,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             Policy and Alpha Loss
             """
             new_obs_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy[en_index](
-                obs.detach().clone(), reparameterize=True, return_log_prob=True,
+                obs, reparameterize=True, return_log_prob=True,
             )
             # log_pi_list.append(log_pi) ##
 
@@ -424,6 +424,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))) ##
+
+            self.diagram_statistics['Weight'].append(np.mean(ptu.get_numpy(weight_target_Q))) ##
 
             r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
             self.diagram_statistics['R_sum'].append(r_sum) ##
@@ -679,7 +681,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
                 tot_policy_loss
             ))) ##
-            self.diagram_statistics['Weight_actor_q'].append(np.mean(ptu.get_numpy(weight_actor_Q))) ##
+            self.diagram_statistics['Weight'].append(np.mean(ptu.get_numpy(weight_target_Q))) ##
 
             r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
             self.diagram_statistics['R_sum'].append(r_sum) ##
