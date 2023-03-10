@@ -574,10 +574,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 std_Q = std_Q_actor_list[0]
 
             # print("Actor temp",self.temperature_act)
-            if tuning == False:
-                weight_actor_Q = 0.5
+            # if tuning == False:
+            #     weight_actor_Q = 0.5
             
-            elif self.feedback_type == 1 or self.feedback_type == 0:
+            if self.feedback_type == 1 or self.feedback_type == 0:
                 weight_actor_Q = (torch.sigmoid(-std_Q*self.temperature_act) + 0.5).detach()
             else:
                 weight_actor_Q = (2*torch.sigmoid(-std_Q*self.temperature_act)).detach()
@@ -597,6 +597,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 self.target_qf1[en_index](next_obs, new_next_actions),
                 self.target_qf2[en_index](next_obs, new_next_actions),
             ) - alpha * new_log_pi
+
+            if tuning != True:
+                std_Q_critic_list = std_Q_critic_list * 0
             
             if self.feedback_type == 0 or self.feedback_type == 2:
                 if self.feedback_type == 0:
