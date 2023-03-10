@@ -238,16 +238,17 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
             temp_count = 0
             for en_index in r:
-                policy_action, _, _, _, *_ = self.policy[en_index](
-                    obs, reparameterize=True, return_log_prob=True,
-                )  ## policy action from sim environment?
+                with torch.no_grad():
+                    policy_action, _, _, _, *_ = self.policy[en_index](
+                        obs, reparameterize=True, return_log_prob=True,
+                    )  ## policy action from sim environment?
                     
-                if update_type == 0: # actor
-                    target_Q1 = self.qf1[en_index](obs, policy_action)
-                    target_Q2 = self.qf2[en_index](obs, policy_action)
-                else: # critic
-                    target_Q1 = self.target_qf1[en_index](obs, policy_action)
-                    target_Q2 = self.target_qf2[en_index](obs, policy_action)
+                    if update_type == 0: # actor
+                        target_Q1 = self.qf1[en_index](obs, policy_action)
+                        target_Q2 = self.qf2[en_index](obs, policy_action)
+                    else: # critic
+                        target_Q1 = self.target_qf1[en_index](obs, policy_action)
+                        target_Q2 = self.target_qf2[en_index](obs, policy_action)
 
                 if temp_count == 0:
                     ## var_Q = (target_Q.detach() - mean_Q)**2
@@ -258,9 +259,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     var_Q += (target_Q1.detach() - mean_Q)**2
                     var_Q += (target_Q2.detach() - mean_Q)**2
                 temp_count += 1
-            var_Q = var_Q / (temp_count*2)
-            std_Q_list.append(torch.sqrt(var_Q).detach())
-            # std_Q_list[-1] = torch.tensor(1.0) ##
+                var_Q = var_Q / (temp_count*2)
+                std_Q_list.append(torch.sqrt(var_Q).detach())
+                # std_Q_list[-1] = torch.tensor(1.0) ##
 
         return std_Q_list
         
@@ -289,13 +290,14 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         # log_pi_list = [] ##
         
         for en_index in range(self.num_ensemble):
+            print("en_index",en_index)
             mask = masks[:,en_index].reshape(-1, 1)
 
             """
             Policy and Alpha Loss
             """
             new_obs_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy[en_index](
-                obs, reparameterize=True, return_log_prob=True,
+                obs.detach().clone(), reparameterize=True, return_log_prob=True,
             )
             # log_pi_list.append(log_pi) ##
 
@@ -310,11 +312,12 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 alpha_loss = 0
                 alpha = 1
 
-            with torch.no_grad():
-                q_new_actions = torch.min(
-                    self.qf1[en_index](obs, new_obs_actions),
-                    self.qf2[en_index](obs, new_obs_actions),
-                )
+            q_new_actions = torch.min(
+                self.qf1[en_index](obs, new_obs_actions),
+                self.qf2[en_index](obs, new_obs_actions),
+            )
+            q_new_actions = self.target_qf1[en_index](obs, new_obs_actions)
+            q_new_actions = self.qf1[en_index](obs,new_obs_actions)
             
             if self.feedback_type == 0 or self.feedback_type == 2:
                 std_Q = std_Q_actor_list[en_index]
@@ -326,13 +329,11 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             else:
                 weight_actor_Q = 2*torch.sigmoid(-std_Q*self.temperature_act)
             policy_loss = (alpha*log_pi - q_new_actions - self.expl_gamma * std_Q) * mask * weight_actor_Q.detach()
-            policy_loss = policy_loss.sum() / (mask.sum() + 1)
+            policy_loss = torch.sum(policy_loss) / (mask.sum() + 1)
 
             """
             QF Loss
             """
-            q1_pred = self.qf1[en_index](obs, actions)
-            q2_pred = self.qf2[en_index](obs, actions)
             
             # Make sure policy accounts for squashing functions like tanh correctly!
             new_next_actions, _, _, new_log_pi, *_ = self.policy[en_index](
@@ -353,6 +354,15 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     weight_target_Q = torch.sigmoid(-std_Q_critic_list[0]*self.temperature) + 0.5
                 else:
                     weight_target_Q = 2*torch.sigmoid(-std_Q_critic_list[0]*self.temperature)
+
+            ## Compute policy gradient before calling qf again
+            self.policy_optimizer[en_index].zero_grad()
+            policy_loss.backward()
+            self.policy_optimizer[en_index].step()
+
+            q1_pred = self.qf1[en_index](obs, actions)
+            q2_pred = self.qf2[en_index](obs, actions)
+
             q_target = self.reward_scale * rewards + (1. - terminals) * self.discount * target_q_values
             qf1_loss = self.qf_criterion(q1_pred, q_target.detach()) * mask * (weight_target_Q.detach())
             qf2_loss = self.qf_criterion(q2_pred, q_target.detach()) * mask * (weight_target_Q.detach())
@@ -370,9 +380,6 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             qf2_loss.backward()
             self.qf2_optimizer[en_index].step()
 
-            self.policy_optimizer[en_index].zero_grad()
-            policy_loss.backward()
-            self.policy_optimizer[en_index].step()
 
             """
             Soft Updates
@@ -398,7 +405,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             tot_policy_log_std += policy_log_std * (1/self.num_ensemble)
             tot_alpha += alpha.item() * (1/self.num_ensemble)
             tot_alpha_loss += alpha_loss.item()
-            tot_policy_loss = (log_pi - q_new_actions).mean() * (1/self.num_ensemble)
+            tot_policy_loss = torch.mean(log_pi - q_new_actions) * (1/self.num_ensemble)
 
         """
         Save some statistics for eval
@@ -556,11 +563,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 alpha_loss = 0
                 alpha = 1
 
-            with torch.no_grad():
-                q_new_actions = torch.min(
-                    self.qf1[en_index](obs, new_obs_actions),
-                    self.qf2[en_index](obs, new_obs_actions),
-                )
+            q_new_actions = torch.min(
+                self.qf1[en_index](obs, new_obs_actions),
+                self.qf2[en_index](obs, new_obs_actions),
+            )
             
             if self.feedback_type == 0 or self.feedback_type == 2:
                 std_Q = std_Q_actor_list[en_index]
@@ -582,9 +588,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             """
             QF Loss
             """
-            q1_pred = self.qf1[en_index](obs, actions)
-            q2_pred = self.qf2[en_index](obs, actions)
-            
+
             # Make sure policy accounts for squashing functions like tanh correctly!
             new_next_actions, _, _, new_log_pi, *_ = self.policy[en_index](
                 next_obs, reparameterize=True, return_log_prob=True,
@@ -604,6 +608,14 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     weight_target_Q = torch.sigmoid(-std_Q_critic_list[0]*self.temperature) + 0.5
                 else:
                     weight_target_Q = 2*torch.sigmoid(-std_Q_critic_list[0]*self.temperature)
+
+            self.policy_optimizer[en_index].zero_grad()
+            policy_loss.backward()
+            self.policy_optimizer[en_index].step()
+
+            q1_pred = self.qf1[en_index](obs, actions)
+            q2_pred = self.qf2[en_index](obs, actions)
+            
             q_target = self.reward_scale * rewards + (1. - terminals) * self.discount * target_q_values
             qf1_loss = self.qf_criterion(q1_pred, q_target.detach()) * mask * (weight_target_Q.detach())
             qf2_loss = self.qf_criterion(q2_pred, q_target.detach()) * mask * (weight_target_Q.detach())
@@ -620,10 +632,6 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.qf2_optimizer[en_index].zero_grad()
             qf2_loss.backward()
             self.qf2_optimizer[en_index].step()
-
-            self.policy_optimizer[en_index].zero_grad()
-            policy_loss.backward()
-            self.policy_optimizer[en_index].step()
 
             """
             Soft Updates
