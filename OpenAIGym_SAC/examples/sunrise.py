@@ -62,9 +62,9 @@ def experiment(variant):
     num_real = 1
 
     expl_env = VectorizedGym()
-    expl_env_single = gym.make("Pendulum-v1")
+    expl_env_single = gym.make("MountainCarContinuous-v0")
     eval_env = VectorizedGym()
-    obs_dim = 3
+    obs_dim = 2
     action_dim = 1
     # obs_dim = 5
     # action_dim = 2
@@ -200,7 +200,7 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=100,
+            num_epochs=200,
             num_eval_steps_per_epoch=1000,
             num_trains_per_train_loop=1000,
             num_expl_steps_per_train_loop=1000,
@@ -234,6 +234,6 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, False)
+    ptu.set_gpu_mode(True, True)
     print(sys.version)
     experiment(variant)
