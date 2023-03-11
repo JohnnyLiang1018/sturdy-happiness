@@ -206,25 +206,25 @@ if __name__ == "__main__":
             num_expl_steps_per_train_loop=1000,
             min_num_steps_before_training=1000,
             max_path_length=1000,
-            batch_size=args.batch_size,
+            batch_size=256,
             save_frequency=args.save_freq,
         ),
         trainer_kwargs=dict(
             discount=0.99,
             soft_target_tau=5e-3,
-            target_update_period=1,
-            policy_lr=3E-4,
-            qf_lr=3E-4,
+            target_update_period=2,
+            policy_lr=1E-3,
+            qf_lr=1E-4,
             reward_scale=1,
             use_automatic_entropy_tuning=True,
         ),
-        num_ensemble=args.num_ensemble,
-        num_layer=args.num_layer,
+        num_ensemble=3,
+        num_layer=4,
         seed=args.seed,
         ber_mean=args.ber_mean,
         env=args.env,
-        inference_type=args.inference_type,
-        temperature=args.temperature,
+        inference_type=1,
+        temperature=0.1,
         log_dir="",
     )
     
@@ -234,6 +234,6 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, True)
+    ptu.set_gpu_mode(True, False)
     print(sys.version)
     experiment(variant)
