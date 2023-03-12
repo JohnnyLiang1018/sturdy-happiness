@@ -17,6 +17,7 @@ from examples.sunrise_async.client import Client
 import pickle
 import sys
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     # architecture
@@ -234,6 +235,8 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, False)
+    ptu.set_gpu_mode(True, True)
     print(sys.version)
     experiment(variant)
+
+    
