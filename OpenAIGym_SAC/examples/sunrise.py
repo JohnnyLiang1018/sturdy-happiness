@@ -63,9 +63,9 @@ def experiment(variant):
     num_real = 1
 
     expl_env = VectorizedGym()
-    expl_env_single = gym.make("MountainCarContinuous-v0")
+    expl_env_single = gym.make("Pendulum-v1")
     eval_env = VectorizedGym()
-    obs_dim = 2
+    obs_dim = 3
     action_dim = 1
     # obs_dim = 5
     # action_dim = 2
