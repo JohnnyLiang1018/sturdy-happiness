@@ -63,9 +63,9 @@ def experiment(variant):
     num_real = 1
 
     expl_env = VectorizedGym()
-    expl_env_single = gym.make("MountainCarContinuous-v0")
+    expl_env_single = gym.make("Pendulum-v1")
     eval_env = VectorizedGym()
-    obs_dim = 2
+    obs_dim = 3
     action_dim = 1
     # obs_dim = 5
     # action_dim = 2
@@ -201,7 +201,7 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=100,
+            num_epochs=250,
             num_eval_steps_per_epoch=1000,
             num_trains_per_train_loop=1000,
             num_expl_steps_per_train_loop=1000,

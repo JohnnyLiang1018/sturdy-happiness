@@ -47,7 +47,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
     ):
         super().__init__()
         self.env = env
-        self.eval_env = gym.make("MountainCarContinuous-v0") ##
+        self.eval_env = gym.make("Pendulum-v1") ##
         self.policy = policy
         self.qf1 = qf1
         self.qf2 = qf2
