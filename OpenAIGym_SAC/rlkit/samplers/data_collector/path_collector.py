@@ -293,6 +293,63 @@ class EnsembleMdpPathCollector(PathCollector):
         self._epoch_paths.extend(paths_real)    
 
         return paths_sim, paths_real
+
+    # def collect_new_paths(
+    #         self,
+    #         max_path_length,
+    #         num_steps,
+    #         discard_incomplete_paths,
+    # ):
+    #     paths = []
+    #     num_steps_collected = 0
+    #     while num_steps_collected < num_steps:
+    #         max_path_length_this_loop = min(  # Do not go over num_steps
+    #             max_path_length,
+    #             num_steps - num_steps_collected,
+    #         )
+    #         if self.eval_flag:
+    #             path = ensemble_eval_rollout(
+    #                 self._env,
+    #                 self._policy,
+    #                 self.num_ensemble,
+    #                 max_path_length=max_path_length_this_loop,
+    #             )
+    #         else:
+    #             if self.inference_type > 0: # UCB
+    #                 path = ensemble_ucb_rollout(
+    #                     self._env,
+    #                     self._policy,
+    #                     critic1=self.critic1,
+    #                     critic2=self.critic2,
+    #                     inference_type=self.inference_type,
+    #                     feedback_type=self.feedback_type,
+    #                     num_ensemble=self.num_ensemble,
+    #                     noise_flag=self._noise_flag,
+    #                     max_path_length=max_path_length_this_loop,
+    #                     ber_mean=self.ber_mean,
+    #                 )
+    #             else:
+    #                 path = ensemble_rollout(
+    #                     self._env,
+    #                     self._policy,
+    #                     self.num_ensemble,
+    #                     noise_flag=self._noise_flag,
+    #                     max_path_length=max_path_length_this_loop,
+    #                     ber_mean=self.ber_mean,
+    #                 )
+    #         path_len = len(path['actions'])
+    #         if (
+    #                 path_len != max_path_length
+    #                 and not path['terminals'][-1]
+    #                 and discard_incomplete_paths
+    #         ):
+    #             break
+    #         num_steps_collected += path_len
+    #         paths.append(path)
+    #     self._num_paths_total += len(paths)
+    #     self._num_steps_total += num_steps_collected
+    #     self._epoch_paths.extend(paths)
+    #     return paths
     
     def reward_eval(self):
         r_sum = ensemble_eval(self._env, self._policy, self.num_ensemble, max_path_length=1000)

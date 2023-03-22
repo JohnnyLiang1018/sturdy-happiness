@@ -315,8 +315,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 self.qf1[en_index](obs, new_obs_actions),
                 self.qf2[en_index](obs, new_obs_actions),
             )
-            q_new_actions = self.target_qf1[en_index](obs, new_obs_actions)
-            q_new_actions = self.qf1[en_index](obs,new_obs_actions)
+            # q_new_actions = self.target_qf1[en_index](obs, new_obs_actions)
+            # q_new_actions = self.qf1[en_index](obs,new_obs_actions)
             
             if self.feedback_type == 0 or self.feedback_type == 2:
                 std_Q = std_Q_actor_list[en_index]
@@ -355,9 +355,6 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     weight_target_Q = 2*torch.sigmoid(-std_Q_critic_list[0]*self.temperature)
 
             ## Compute policy gradient before calling qf again
-            self.policy_optimizer[en_index].zero_grad()
-            policy_loss.backward()
-            self.policy_optimizer[en_index].step()
 
             q1_pred = self.qf1[en_index](obs, actions)
             q2_pred = self.qf2[en_index](obs, actions)
@@ -371,6 +368,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             """
             Update networks
             """
+            self.policy_optimizer[en_index].zero_grad()
+            policy_loss.backward()
+            self.policy_optimizer[en_index].step()
+
             self.qf1_optimizer[en_index].zero_grad()
             qf1_loss.backward()
             self.qf1_optimizer[en_index].step()

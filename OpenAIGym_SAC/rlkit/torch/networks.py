@@ -70,10 +70,10 @@ class Mlp(nn.Module):
             if self.layer_norm and i < len(self.fcs) - 1:
                 h = self.layer_norms[i](h)
             h = self.hidden_activation(h)
-        preactivation = self.last_fc(h)
-        output = self.output_activation(preactivation)
+        h = self.last_fc(h)
+        output = self.output_activation(h)
         if return_preactivations:
-            return output, preactivation
+            return output, h
         else:
             return output
 

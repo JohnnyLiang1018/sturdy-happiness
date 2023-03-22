@@ -118,7 +118,7 @@ def experiment(variant):
     
     eval_path_collector = EnsembleMdpPathCollector(
         client,
-        expl_env,
+        expl_env, 
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -131,7 +131,7 @@ def experiment(variant):
     
     expl_path_collector = EnsembleMdpPathCollector(
         client,
-        expl_env,
+        expl_env, 
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -144,7 +144,7 @@ def experiment(variant):
     
     replay_buffer_sim = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        expl_env_single,
+        expl_env_single, 
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
@@ -235,7 +235,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, False)
+    ptu.set_gpu_mode(True, True)
     print(sys.version)
     experiment(variant)
 
