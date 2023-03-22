@@ -328,7 +328,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             else:
                 weight_actor_Q = 2*torch.sigmoid(-std_Q*self.temperature_act)
             policy_loss = (alpha*log_pi - q_new_actions - self.expl_gamma * std_Q) * mask * weight_actor_Q.detach()
-            policy_loss = torch.sum(policy_loss) / (mask.sum() + 1)
+            policy_loss = policy_loss.sum() / (mask.sum() + 1)
 
             """
             QF Loss
@@ -356,6 +356,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
             ## Compute policy gradient before calling qf again
 
+            self.policy_optimizer[en_index].zero_grad()
+            policy_loss.backward()
+            self.policy_optimizer[en_index].step()
+
             q1_pred = self.qf1[en_index](obs, actions)
             q2_pred = self.qf2[en_index](obs, actions)
 
@@ -368,10 +372,6 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             """
             Update networks
             """
-            self.policy_optimizer[en_index].zero_grad()
-            policy_loss.backward()
-            self.policy_optimizer[en_index].step()
-
             self.qf1_optimizer[en_index].zero_grad()
             qf1_loss.backward()
             self.qf1_optimizer[en_index].step()
