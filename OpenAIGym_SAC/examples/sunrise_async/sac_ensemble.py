@@ -265,14 +265,20 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
         return std_Q_list
         
-    def train_from_torch(self, batch_sim, batch_real):
+    def train_from_torch(self, batch):
         torch.autograd.set_detect_anomaly(True)
-        rewards = torch.cat((batch_sim['rewards'],batch_real['rewards']))
-        terminals = torch.cat((batch_sim['terminals'], batch_real['terminals']))
-        obs = torch.cat((batch_sim['observations'], batch_real['observations']))
-        actions = torch.cat((batch_sim['actions'], batch_real['actions']))
-        next_obs = torch.cat((batch_sim['next_observations'], batch_real['next_observations']))
-        masks = torch.cat((batch_sim['masks'], batch_real['masks']))
+        # rewards = torch.cat((batch_sim['rewards'],batch_real['rewards']))
+        # terminals = torch.cat((batch_sim['terminals'], batch_real['terminals']))
+        # obs = torch.cat((batch_sim['observations'], batch_real['observations']))
+        # actions = torch.cat((batch_sim['actions'], batch_real['actions']))
+        # next_obs = torch.cat((batch_sim['next_observations'], batch_real['next_observations']))
+        # masks = torch.cat((batch_sim['masks'], batch_real['masks']))
+        rewards = batch['rewards']
+        terminals = batch['terminals']
+        obs = batch['observations']
+        actions = batch['actions']
+        next_obs = batch['next_observations']
+        masks = batch['masks']
         
         # variables for logging
         tot_qf1_loss, tot_qf2_loss, tot_q1_pred, tot_q2_pred, tot_q_target = 0, 0, 0, 0, 0

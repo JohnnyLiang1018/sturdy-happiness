@@ -44,11 +44,10 @@ class TorchTrainer(Trainer, metaclass=abc.ABCMeta):
     def __init__(self):
         self._num_train_steps = 0
 
-    def train(self, np_batch_sim, np_batch_real):
+    def train(self, np_batch):
         self._num_train_steps += 1
-        batch_sim = np_to_pytorch_batch(np_batch_sim)
-        batch_real = np_to_pytorch_batch(np_batch_real)
-        self.train_from_torch(batch_sim,batch_real)
+        batch = np_to_pytorch_batch(np_batch)
+        self.train_from_torch(batch)
 
     def train_exp(self, np_batch_sim, np_batch_real, tuning):
         self._num_train_steps += 1

@@ -50,19 +50,19 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
         print("beginning of training")
         if self.min_num_steps_before_training > 0:
             print("collect initial path")
-            init_expl_paths_sim, init_expl_paths_real = self.expl_data_collector.collect_new_paths(
-                self.max_path_length,
-                self.min_num_steps_before_training,
-                discard_incomplete_paths=False,
-            )
-            # init_expl_paths = self.expl_data_collector.collect_new_paths(
+            # init_expl_paths_sim, init_expl_paths_real = self.expl_data_collector.collect_new_paths(
             #     self.max_path_length,
             #     self.min_num_steps_before_training,
             #     discard_incomplete_paths=False,
             # )
-            self.replay_buffer.add_paths(init_expl_paths_sim)
-            self.replay_buffer_real.add_paths(init_expl_paths_real)
-            # self.replay_buffer.add_path(init_expl_paths)
+            init_expl_paths = self.expl_data_collector.collect_new_paths(
+                self.max_path_length,
+                self.min_num_steps_before_training,
+                discard_incomplete_paths=False,
+            )
+            # self.replay_buffer.add_paths(init_expl_paths_sim)
+            # self.replay_buffer_real.add_paths(init_expl_paths_real)
+            self.replay_buffer.add_paths(init_expl_paths)
             self.expl_data_collector.end_epoch(-1)
 
         count = 1000 ##
@@ -86,36 +86,37 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             
 
             for _ in range(self.num_train_loops_per_epoch):
-                new_expl_paths_sim, new_expl_paths_real = self.expl_data_collector.collect_new_paths(
-                    self.max_path_length,
-                    self.num_expl_steps_per_train_loop,
-                    discard_incomplete_paths=False,
-                )
-                # new_expl_paths = self.expl_data_collector.collect_new_paths(
+                # new_expl_paths_sim, new_expl_paths_real = self.expl_data_collector.collect_new_paths(
                 #     self.max_path_length,
                 #     self.num_expl_steps_per_train_loop,
                 #     discard_incomplete_paths=False,
                 # )
+                new_expl_paths = self.expl_data_collector.collect_new_paths(
+                    self.max_path_length,
+                    self.num_expl_steps_per_train_loop,
+                    discard_incomplete_paths=False,
+                )
                 gt.stamp('exploration sampling', unique=False)
 
-                self.replay_buffer.add_paths(new_expl_paths_sim)
-                self.replay_buffer_real.add_paths(new_expl_paths_real)
-                # self.replay_buffer.add_paths(new_expl_paths)
+                # self.replay_buffer.add_paths(new_expl_paths_sim)
+                # self.replay_buffer_real.add_paths(new_expl_paths_real)
+                self.replay_buffer.add_paths(new_expl_paths)
                 gt.stamp('data storing', unique=False)
 
                 self.training_mode(True)
                 print("start training")
 
                 for _ in range(self.num_trains_per_train_loop):
-                    if count > self.num_epochs / 2:
-                        train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
-                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
-                        tuning = True
-                    else:
-                        train_data_sim = self.replay_buffer.random_batch(self.batch_size)
-                        train_data_real = self.replay_buffer_real.random_batch(self.batch_size)
-                        tuning = False
-                    self.trainer.train(train_data_sim,train_data_real)
+                    # if count > self.num_epochs / 2:
+                    #     train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
+                    #     train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
+                    #     tuning = True
+                    # else:
+                    #     train_data_sim = self.replay_buffer.random_batch(self.batch_size)
+                    #     train_data_real = self.replay_buffer_real.random_batch(self.batch_size)
+                    #     tuning = False
+                    train_data = self.replay_buffer.random_batch(self.batch_size)
+                    self.trainer.train(train_data)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
             count += 1

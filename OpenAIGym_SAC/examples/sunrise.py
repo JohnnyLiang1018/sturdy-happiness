@@ -118,7 +118,7 @@ def experiment(variant):
     
     eval_path_collector = EnsembleMdpPathCollector(
         client,
-        expl_env, 
+        expl_env_single, 
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -131,7 +131,7 @@ def experiment(variant):
     
     expl_path_collector = EnsembleMdpPathCollector(
         client,
-        expl_env, 
+        expl_env_single, 
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -157,7 +157,7 @@ def experiment(variant):
     )
     
     trainer = NeurIPS20SACEnsembleTrainer(
-        env=eval_env,
+        env=expl_env_single,
         policy=L_policy,
         qf1=L_qf1,
         qf2=L_qf2,
@@ -174,8 +174,8 @@ def experiment(variant):
     )
     algorithm = TorchBatchRLAlgorithm(
         trainer=trainer,
-        exploration_env=expl_env,
-        evaluation_env=eval_env,
+        exploration_env=expl_env_single,
+        evaluation_env=expl_env_single,
         exploration_data_collector=expl_path_collector,
         evaluation_data_collector=eval_path_collector,
         replay_buffer=replay_buffer_sim,
@@ -214,7 +214,7 @@ if __name__ == "__main__":
             discount=0.99,
             soft_target_tau=5e-3,
             target_update_period=1,
-            policy_lr=3E-4,
+            policy_lr=3E-3,
             qf_lr=3E-4,
             reward_scale=1,
             use_automatic_entropy_tuning=True,
@@ -224,7 +224,7 @@ if __name__ == "__main__":
         seed=args.seed,
         ber_mean=args.ber_mean,
         env=args.env,
-        inference_type=1,
+        inference_type=0,
         temperature=20,
         log_dir="",
     )
