@@ -130,7 +130,8 @@ class EnsembleMdpPathCollector(PathCollector):
     def __init__(
             self,
             client,
-            env,
+            env_sim,
+            env_real,
             policy,
             num_ensemble,
             noise_flag=0,
@@ -147,7 +148,8 @@ class EnsembleMdpPathCollector(PathCollector):
         if render_kwargs is None:
             render_kwargs = {}
         self.client = client ##
-        self._env = env
+        self._env = env_sim ##
+        self._env_real = env_real ##
         self._policy = policy
         self._max_num_epoch_paths_saved = max_num_epoch_paths_saved
         self._epoch_paths = deque(maxlen=self._max_num_epoch_paths_saved)
@@ -190,12 +192,11 @@ class EnsembleMdpPathCollector(PathCollector):
                 )
             else:
                 if self.inference_type > 0: # UCB
-                    sim_1_path, sim_2_path, real_path = ensemble_ucb_rollout(
-                        self.client,
+                    path_sim = ensemble_ucb_rollout(
                         self._env,
-                        self._policy,
-                        critic1=self.critic1,
-                        critic2=self.critic2,
+                        self._policy[:self.num_ensemble], ##
+                        critic1=self.critic1[:self.num_ensemble], ##
+                        critic2=self.critic2[:self.num_ensemble], ##
                         inference_type=self.inference_type,
                         feedback_type=self.feedback_type,
                         num_ensemble=self.num_ensemble,
@@ -203,31 +204,51 @@ class EnsembleMdpPathCollector(PathCollector):
                         max_path_length=max_path_length_this_loop,
                         ber_mean=self.ber_mean,
                     )
-                    sim_1 = False
-                    sim_2 = False
+
+                    path_real = ensemble_ucb_rollout(
+                        self._env_real,
+                        self._policy[self.num_ensemble:], ##
+                        critic1=self.critic1[self.num_ensemble:], ##
+                        critic2=self.critic2[self.num_ensemble:], ##
+                        inference_type=self.inference_type,
+                        feedback_type=self.feedback_type,
+                        num_ensemble=self.num_ensemble,
+                        noise_flag=self._noise_flag,
+                        max_path_length=max_path_length_this_loop,
+                        ber_mean=self.ber_mean,
+                    )
+
+                # if self.inference_type > 0: # UCB
+                #     sim_1_path, sim_2_path, real_path = ensemble_ucb_rollout(
+                #         self.client,
+                #         self._env,
+                #         self._policy,
+                #         critic1=self.critic1,
+                #         critic2=self.critic2,
+                #         inference_type=self.inference_type,
+                #         feedback_type=self.feedback_type,
+                #         num_ensemble=self.num_ensemble,
+                #         noise_flag=self._noise_flag,
+                #         max_path_length=max_path_length_this_loop,
+                #         ber_mean=self.ber_mean,
+                #     )
+                    sim = False
                     real = False
-                    path_len_1 = len(sim_1_path['actions'])
-                    if(path_len_1 != max_path_length and not sim_1_path['terminals'][-1] and discard_incomplete_paths):
+                    path_len_1 = len(path_sim['actions'])
+                    if(path_len_1 != max_path_length and not path_sim['terminals'][-1] and discard_incomplete_paths):
                         print("discard")
                         sim_1 = True
-                    path_len_2 = len(sim_2_path['actions'])
-                    if(path_len_2 != max_path_length and not sim_2_path['terminals'][-1] and discard_incomplete_paths):
-                        print("discard")
-                        sim_2 = True
-                    path_len_3 = len(real_path['actions'])
-                    if(path_len_3 != max_path_length and not real_path['terminals'][-1] and discard_incomplete_paths):
+                    path_len_2 = len(path_real['actions'])
+                    if(path_len_2 != max_path_length and not path_real['terminals'][-1] and discard_incomplete_paths):
                         print("discard")
                         real = True
             
-                    if sim_1 != True:
+                    if sim != True:
                         num_steps_collected += path_len_1
-                        paths_sim.append(sim_1_path)
-                    if sim_2 != True:
-                        num_steps_collected += path_len_2
-                        paths_sim.append(sim_2_path)
+                        paths_sim.append(path_sim)
                     if real != True:
-                        num_steps_collected += path_len_3
-                        paths_real.append(sim_2_path)
+                        num_steps_collected += path_len_2
+                        paths_real.append(path_real)
 
                 elif self.inference_type == -1:
                     path_real = ensemble_real_rollout(

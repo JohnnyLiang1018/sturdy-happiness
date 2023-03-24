@@ -63,8 +63,8 @@ def experiment(variant):
     num_real = 1
 
     expl_env = VectorizedGym()
-    expl_env_single = gym.make("Pendulum-v1")
-    eval_env = VectorizedGym()
+    expl_env_sim = gym.make("Pendulum-v1", g=9.75)
+    expl_env_real = gym.make("Pendulum-v1", g=9.8)
     obs_dim = 3
     action_dim = 1
     # obs_dim = 5
@@ -80,7 +80,7 @@ def experiment(variant):
     # client = Client()
     client = None
     
-    for _ in range(NUM_ENSEMBLE):
+    for _ in range(NUM_ENSEMBLE*2):
     
         qf1 = FlattenMlp(
             input_size=obs_dim + action_dim,
@@ -118,7 +118,8 @@ def experiment(variant):
     
     eval_path_collector = EnsembleMdpPathCollector(
         client,
-        expl_env, 
+        expl_env_sim, ##
+        expl_env_real, ##
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -131,7 +132,8 @@ def experiment(variant):
     
     expl_path_collector = EnsembleMdpPathCollector(
         client,
-        expl_env, 
+        expl_env_sim, ##
+        expl_env_real,  ##
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -144,14 +146,14 @@ def experiment(variant):
     
     replay_buffer_sim = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        expl_env_single, 
+        expl_env_sim, 
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
 
     replay_buffer_real = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        expl_env_single,
+        expl_env_real,
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
@@ -174,8 +176,8 @@ def experiment(variant):
     )
     algorithm = TorchBatchRLAlgorithm(
         trainer=trainer,
-        exploration_env=expl_env,
-        evaluation_env=expl_env,
+        exploration_env=expl_env_sim,
+        evaluation_env=expl_env_real,
         exploration_data_collector=expl_path_collector,
         evaluation_data_collector=eval_path_collector,
         replay_buffer=replay_buffer_sim,
