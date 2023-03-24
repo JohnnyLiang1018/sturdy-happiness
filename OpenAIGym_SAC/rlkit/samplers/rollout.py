@@ -589,6 +589,12 @@ def ensemble_ucb_rollout(
     path_length = 0
     if render:
         env.render(**render_kwargs)
+    
+    for i in range(num_ensemble): ##
+        agent[i].to(ptu.device)
+        critic1[i].to(ptu.device)
+        critic2[i].to(ptu.device)
+
         
     while path_length < max_path_length:
         a_max, ucb_max, agent_info_max = None, None, None

@@ -159,7 +159,8 @@ def experiment(variant):
     )
     
     trainer = NeurIPS20SACEnsembleTrainer(
-        env=expl_env,
+        env=expl_env_sim,
+        env_real = expl_env_real,
         policy=L_policy,
         qf1=L_qf1,
         qf2=L_qf2,
