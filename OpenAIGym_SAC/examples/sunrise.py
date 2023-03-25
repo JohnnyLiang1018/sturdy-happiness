@@ -59,8 +59,8 @@ def experiment(variant):
     # eval_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
     # obs_dim = expl_env.observation_space.low.size
     # action_dim = eval_env.action_space.low.size
-    num_sim = 2
-    num_real = 1
+    num_sim = 3
+    num_real = 3
 
     expl_env = VectorizedGym()
     expl_env_sim = gym.make("Pendulum-v1", g=9.75)
@@ -108,6 +108,12 @@ def experiment(variant):
             hidden_sizes=network_structure,
         )
         eval_policy = MakeDeterministic(policy)
+
+        qf1.to(ptu.device)
+        qf2.to(ptu.device)
+        target_qf1.to(ptu.device)
+        target_qf2.to(ptu.device)
+        policy.to(ptu.device)
         
         L_qf1.append(qf1)
         L_qf2.append(qf2)
@@ -173,6 +179,7 @@ def experiment(variant):
         expl_gamma=0,
         log_dir=variant['log_dir'],
         num_sim = num_sim, ##
+        num_real = num_real, ## 
         **variant['trainer_kwargs']
     )
     algorithm = TorchBatchRLAlgorithm(

@@ -65,7 +65,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             # self.replay_buffer.add_paths(init_expl_paths)
             self.expl_data_collector.end_epoch(-1)
 
-        count = 1000 ##
+        count = 0 ##
         for epoch in gt.timed_for(
                 range(self._start_epoch, self.num_epochs),
                 save_itrs=True,
@@ -107,16 +107,16 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 print("start training")
 
                 for _ in range(self.num_trains_per_train_loop):
-                    # if count > self.num_epochs / 2:
-                    #     train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
-                    #     train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
-                    #     tuning = True
-                    # else:
-                    #     train_data_sim = self.replay_buffer.random_batch(self.batch_size)
-                    #     train_data_real = self.replay_buffer_real.random_batch(self.batch_size)
-                    #     tuning = False
-                    train_data = self.replay_buffer.random_batch(self.batch_size)
-                    self.trainer.train(train_data)
+                    if count > self.num_epochs / 2:
+                        train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
+                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
+                        tuning = True
+                    else:
+                        train_data_sim = self.replay_buffer.random_batch(self.batch_size)
+                        train_data_real = self.replay_buffer_real.random_batch(self.batch_size)
+                        tuning = False
+                    # train_data = self.replay_buffer.random_batch(self.batch_size)
+                    self.trainer.train_exp(train_data_sim,train_data_real,tuning)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
             count += 1

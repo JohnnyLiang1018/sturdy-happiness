@@ -30,6 +30,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             expl_gamma,
             log_dir,
             num_sim, ##
+            num_real, ##
         
             discount=0.99,
             reward_scale=1.0,
@@ -65,6 +66,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.expl_gamma = expl_gamma
         self.model_dir = log_dir + '/model/'
         self.num_sim = num_sim ##
+        self.num_real = num_real ##
         
         self.use_automatic_entropy_tuning = use_automatic_entropy_tuning
         
@@ -121,12 +123,12 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
-    def corrective_feedback(self, obs, update_type):
+    def corrective_feedback(self, obs, update_type, is_sim):
         std_Q_list = []
         # obs_sim = obs[:,:3]
         # obs_real = obs[:,3:]
         # print("obs shape ", obs)
-        if self.feedback_type == 0 or self.feedback_type == 2:
+        if self.feedback_type == 0  or self.feedback_type == 2:
             for en_index in range(self.num_ensemble):
                 with torch.no_grad():
                     policy_action, _, _, _, *_ = self.policy[en_index](
@@ -143,9 +145,18 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 std_Q_list.append(torch.sqrt(var_Q).detach())
                 
         elif self.feedback_type == 1 or self.feedback_type == 3:
-            mean_Q_sim, mean_Q_real, var_Q = None, None, None
+            mean_Q, var_Q = None, None
             L_target_Q = []
-            for en_index in range(self.num_ensemble):
+            num_ensemble = 0
+
+            if is_sim:
+                ensemble = range(self.num_sim)
+                num_ensemble = self.num_sim
+            else:
+                ensemble = range(self.num_sim, self.num_sim+self.num_real)
+                num_ensemble = self.num_real
+
+            for en_index in ensemble:
                 with torch.no_grad():
                     policy_action, _, _, _, *_ = self.policy[en_index](
                         obs, reparameterize=True, return_log_prob=True,
@@ -159,22 +170,20 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                         target_Q2 = self.target_qf2[en_index](obs, policy_action)
                     L_target_Q.append(target_Q1)
                     L_target_Q.append(target_Q2)
-                    if en_index == 0:
-                        mean_Q = 0.5*(target_Q1 + target_Q2) / self.num_ensemble
+                    if en_index == ensemble.start:
+                        mean_Q = 0.5*(target_Q1 + target_Q2) / num_ensemble
                     else:
-                        mean_Q += 0.5*(target_Q1 + target_Q2) / self.num_ensemble
+                        mean_Q += 0.5*(target_Q1 + target_Q2) / num_ensemble
 
 
-            temp_count = 0
-            for i in range(len(L_target_Q)):
-                if temp_count == 0:
+            for en_index in ensemble:
+                if en_index == ensemble.start:
                     ## var_Q = (target_Q.detach() - mean_Q)**2
-                    var_Q = (L_target_Q[i].detach() - mean_Q)**2
+                    var_Q = (L_target_Q[en_index].detach() - mean_Q)**2
                 else:
                     ## var_Q += (target_Q.detach() - mean_Q)**2
-                    var_Q += (L_target_Q[i].detach() - mean_Q)**2
-                temp_count += 1
-            var_Q = var_Q / temp_count
+                    var_Q += (L_target_Q[en_index].detach() - mean_Q)**2
+            var_Q = var_Q / num_ensemble
             std_Q_list.append(torch.sqrt(var_Q).detach())
             # std_Q_list[-1] = torch.tensor(1.0) ##
 
@@ -209,12 +218,12 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 ## Sim agent will compute mean Q from the real agent ensemble
                 ## and calculate variance for each sim agent
                 r = range(self.num_sim)
-                r_target = range(self.num_sim, self.num_ensemble)
+                r_target = range(self.num_sim, self.num_sim+self.num_real)
 
             else:
                 ## Real agent's weight is the same as the sunrise approach
-                r = range(self.num_sim, self.num_ensemble)
-                r_target = range(self.num_sim, self.num_ensemble)
+                r = range(self.num_sim, self.num_sim+self.num_real)
+                r_target = range(self.num_sim, self.num_sim+self.num_real)
 
             for en_index in r_target:
                 with torch.no_grad():
@@ -499,10 +508,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             mask_real = batch_real['masks']
 
             ## TODO 
-            std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0)
-            std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1)
-            std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0)
-            std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1)
+            std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True)
+            std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
+            std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0, is_sim=False)
+            std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
 
 
         # variables for logging
@@ -559,7 +568,6 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             new_obs_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy[en_index](
                 obs, reparameterize=True, return_log_prob=True,
             )
-            # log_pi_list.append(log_pi) ##
 
             if self.use_automatic_entropy_tuning:
                 alpha_loss = -(self.log_alpha[en_index] * (log_pi + self.target_entropy).detach()) * mask
@@ -581,10 +589,6 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 std_Q = std_Q_actor_list[en_index]
             else:
                 std_Q = std_Q_actor_list[0]
-
-            # print("Actor temp",self.temperature_act)
-            # if tuning == False:
-            #     weight_actor_Q = 0.5
             
             if self.feedback_type == 1 or self.feedback_type == 0:
                 weight_actor_Q = (torch.sigmoid(-std_Q*self.temperature_act) + 0.5).detach()
