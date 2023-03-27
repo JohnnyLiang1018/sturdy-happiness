@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 import torch
 import pickle
 
-with open('stat_stable5.pickle', 'rb') as handle:
+with open('stat_exp1.pickle', 'rb') as handle:
     stat = pickle.load(handle)
     # stat = torch.load(handle,map_location=torch.device('cpu'))
 
-plt.plot(stat['R_sum'])
+plt.plot(stat['Weight'])
 plt.show()
 
 # print(len(stat['Weight_actor_q']))

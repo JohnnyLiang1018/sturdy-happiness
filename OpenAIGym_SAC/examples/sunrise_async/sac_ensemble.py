@@ -120,6 +120,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.diagram_statistics.update({'Log_pi': []}) ##
         self.diagram_statistics.update({'R_sum': []}) ##
         self.diagram_statistics.update({'Weight': []}) ##
+        self.diagram_statistics.update({'Std_q': []}) ##
+        self.diagram_statistics.update({'Log_pi': []}) ##
+        self.diagram_statistics.update({"Q_action": []}) ##
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
@@ -244,6 +247,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     else:
                         mean_Q += 0.5*(target_Q1 + target_Q2) / self.num_ensemble
 
+                    # print("mean Q", np.mean(ptu.get_numpy(mean_Q)))
 
 
             temp_count = 0
@@ -269,8 +273,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     var_Q += (target_Q1.detach() - mean_Q)**2
                     var_Q += (target_Q2.detach() - mean_Q)**2
                 temp_count += 1
-                var_Q = var_Q / (temp_count*2)
-                std_Q_list.append(torch.sqrt(var_Q).detach())
+            
+            var_Q = var_Q / (temp_count*2)
+            # print("var Q", np.mean(ptu.get_numpy(var_Q)))
+            std_Q_list.append(torch.sqrt(var_Q).detach())
                 # std_Q_list[-1] = torch.tensor(1.0) ##
 
         return std_Q_list
@@ -611,8 +617,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 self.target_qf2[en_index](next_obs, new_next_actions),
             ) - alpha * new_log_pi
 
-            if tuning != True:
-                std_Q_critic_list = [x * 0 for x in std_Q_critic_list]
+            # if tuning != True:
+            #     std_Q_critic_list = [x * 0 for x in std_Q_critic_list]
             
             if self.feedback_type == 0 or self.feedback_type == 2:
                 if self.feedback_type == 0:
@@ -621,7 +627,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     weight_target_Q = 2*torch.sigmoid(-std_Q_critic_list[en_index]*self.temperature)
             else:
                 if self.feedback_type == 1:
+                    # print("std Q", np.mean(ptu.get_numpy(std_Q_critic_list[0])))
                     weight_target_Q = torch.sigmoid(-std_Q_critic_list[0]*self.temperature) + 0.5
+                    # print("weight Q", np.mean(ptu.get_numpy(weight_target_Q)))
                 else:
                     weight_target_Q = 2*torch.sigmoid(-std_Q_critic_list[0]*self.temperature)
 
@@ -696,6 +704,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
             r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
             self.diagram_statistics['R_sum'].append(r_sum) ##
+            self.diagram_statistics['Std_q'].append(np.mean(ptu.get_numpy(self.expl_gamma * std_Q))) ##
+            self.diagram_statistics['Q_action'].append(np.mean(ptu.get_numpy(q_new_actions))) ##
+            self.diagram_statistics['Log_pi'].append(np.mean(ptu.get_numpy(alpha*log_pi))) ##
 
             # self.diagram_statistics['Log_pi'].append(log_pi_list) ##
 
