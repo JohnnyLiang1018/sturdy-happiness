@@ -65,11 +65,13 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             # self.replay_buffer.add_paths(init_expl_paths)
             self.expl_data_collector.end_epoch(-1)
 
-        count = 110 ##
+        count = 0 ##
         for epoch in gt.timed_for(
                 range(self._start_epoch, self.num_epochs),
                 save_itrs=True,
         ):
+            print("Size of real buffer", self.replay_buffer_real.num_steps_can_sample())
+            print("Size of sim buffer", self.replay_buffer.num_steps_can_sample())
             print("start eval collector")
             # self.eval_data_collector.collect_new_paths(
             #     self.max_path_length,
