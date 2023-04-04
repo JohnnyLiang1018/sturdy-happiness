@@ -214,67 +214,65 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 std_Q_list.append(torch.sqrt(var_Q).detach())
                 
         elif self.feedback_type == 1 or self.feedback_type == 3:
-            mean_Q, var_Q = None, None
+            mean_Q_sim, mean_Q_real, var_Q = None, None, None
+            Q_sim = []
+            Q_real = []
             # L_target_Q = []
             
-            if is_sim:
-                ## Sim agent will compute mean Q from the real agent ensemble
-                ## and calculate variance for each sim agent
-                r = range(self.num_sim)
-                r_target = range(self.num_sim, self.num_sim+self.num_real)
+            ## Sim agent will compute mean Q from the real agent ensemble
+            ## and calculate variance for each sim agent
+            r = range(self.num_sim)
+            r_target = range(self.num_sim, self.num_sim+self.num_real)
 
-            else:
-                ## Real agent's weight is the same as the sunrise approach
-                r = range(self.num_sim, self.num_sim+self.num_real)
-                r_target = range(self.num_sim, self.num_sim+self.num_real)
 
-            for en_index in r_target:
+            for en_index in r:
                 with torch.no_grad():
-                    policy_action, _, _, _, *_ = self.policy[en_index](
+                    policy_action_sim, _, _, _, *_ = self.policy[en_index](
                         obs, reparameterize=True, return_log_prob=True,
-                    )  ## policy action from sim environment?
+                    )  
+                    policy_action_real,_,_,_, *_ = self.policy[en_index+self.num_sim](
+                        obs, reparameterize=True, return_log_prob=True,
+                    )
                     
                     if update_type == 0: # actor
-                        target_Q1 = self.qf1[en_index](obs, policy_action)
-                        target_Q2 = self.qf2[en_index](obs, policy_action)
+                        target_Q1_sim = self.qf1[en_index](obs, policy_action_sim)
+                        target_Q2_sim = self.qf2[en_index](obs, policy_action_sim)
+                        target_Q1_real = self.qf1[en_index+self.num_sim](obs, policy_action_real)
+                        target_Q2_real = self.qf2[en_index+self.num_sim](obs, policy_action_real)
                     else: # critic
-                        target_Q1 = self.target_qf1[en_index](obs, policy_action)
-                        target_Q2 = self.target_qf2[en_index](obs, policy_action)
+                        target_Q1_sim = self.target_qf1[en_index](obs, policy_action_sim)
+                        target_Q2_sim = self.target_qf2[en_index](obs, policy_action_sim)
+                        target_Q1_real = self.target_qf1[en_index+self.num_sim](obs, policy_action_real)
+                        target_Q2_real = self.target_qf2[en_index+self.num_sim](obs, policy_action_real)
                     # L_target_Q.append(target_Q1)
                     # L_target_Q.append(target_Q2)
-                    if en_index == r_target.start:
-                        mean_Q = 0.5*(target_Q1 + target_Q2) / self.num_ensemble
+                    Q_sim.append(target_Q1_sim)
+                    Q_sim.append(target_Q2_sim)
+                    Q_real.append(target_Q1_real)
+                    Q_real.append(target_Q2_real)
+
+                    if en_index == r.start:
+                        mean_Q_sim = 0.5*(target_Q1_sim + target_Q2_sim) / self.num_sim
+                        mean_Q_real = 0.5*(target_Q1_real + target_Q2_real) / self.num_real
                     else:
-                        mean_Q += 0.5*(target_Q1 + target_Q2) / self.num_ensemble
+                        mean_Q_sim += 0.5*(target_Q1_sim + target_Q2_sim) / self.num_sim
+                        mean_Q_real += 0.5*(target_Q1_real + target_Q2_real) / self.num_real
 
                     # print("mean Q", np.mean(ptu.get_numpy(mean_Q)))
 
 
-            temp_count = 0
-            for en_index in r:
-                with torch.no_grad():
-                    policy_action, _, _, _, *_ = self.policy[en_index](
-                        obs, reparameterize=True, return_log_prob=True,
-                    )  ## policy action from sim environment?
-                    
-                    if update_type == 0: # actor
-                        target_Q1 = self.qf1[en_index](obs, policy_action)
-                        target_Q2 = self.qf2[en_index](obs, policy_action)
-                    else: # critic
-                        target_Q1 = self.target_qf1[en_index](obs, policy_action)
-                        target_Q2 = self.target_qf2[en_index](obs, policy_action)
-
-                if temp_count == 0:
+            for en_index in range(len(Q_sim)):
+                var_Q_sim = (Q_sim[en_index].detach() - mean_Q_sim)
+                var_Q_real = (Q_real[en_index].detach() - mean_Q_real)
+                if en_index == 0:
                     ## var_Q = (target_Q.detach() - mean_Q)**2
-                    var_Q = (target_Q1.detach() - mean_Q)**2
-                    var_Q += (target_Q2.detach() - mean_Q)**2
+                    var_Q = abs(var_Q_sim * var_Q_real)
+
                 else:
                     ## var_Q += (target_Q.detach() - mean_Q)**2
-                    var_Q += (target_Q1.detach() - mean_Q)**2
-                    var_Q += (target_Q2.detach() - mean_Q)**2
-                temp_count += 1
+                    var_Q += abs(var_Q_sim * var_Q_real)
             
-            var_Q = var_Q / (temp_count*2)
+            var_Q = var_Q / len(Q_sim)
             # print("var Q", np.mean(ptu.get_numpy(var_Q)))
             std_Q_list.append(torch.sqrt(var_Q).detach())
                 # std_Q_list[-1] = torch.tensor(1.0) ##

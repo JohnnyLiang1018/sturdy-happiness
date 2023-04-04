@@ -59,6 +59,8 @@ def experiment(variant):
     # eval_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
     # obs_dim = expl_env.observation_space.low.size
     # action_dim = eval_env.action_space.low.size
+
+    ## num_sim must equal to num_real 
     num_sim = 3
     num_real = 3
 
@@ -245,7 +247,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, False)
+    ptu.set_gpu_mode(True, True)
     print(sys.version)
     experiment(variant)
 
