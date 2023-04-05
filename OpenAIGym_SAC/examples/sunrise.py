@@ -197,7 +197,7 @@ def experiment(variant):
     
     algorithm.to(ptu.device)
     algorithm.train()
-    with open('stat_stable.pickle','wb') as handle:
+    with open('stat_exp4.pickle','wb') as handle:
         pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
     # pickle.dumps(L_policy[0])
     # print("success")
@@ -247,7 +247,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, True)
+    ptu.set_gpu_mode(True, False)
     print(sys.version)
     experiment(variant)
 

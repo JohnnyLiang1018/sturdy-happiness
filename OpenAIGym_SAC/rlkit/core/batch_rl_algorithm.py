@@ -65,7 +65,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             # self.replay_buffer.add_paths(init_expl_paths)
             self.expl_data_collector.end_epoch(-1)
 
-        count = 0 ##
+        count = 110 ##
         for epoch in gt.timed_for(
                 range(self._start_epoch, self.num_epochs),
                 save_itrs=True,
