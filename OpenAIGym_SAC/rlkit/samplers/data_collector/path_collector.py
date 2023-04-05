@@ -214,7 +214,7 @@ class EnsembleMdpPathCollector(PathCollector):
                         feedback_type=self.feedback_type,
                         num_ensemble=self.num_ensemble,
                         noise_flag=self._noise_flag,
-                        max_path_length=max_path_length_this_loop/5,
+                        max_path_length=max_path_length_this_loop,
                         ber_mean=self.ber_mean,
                     )
 
@@ -234,12 +234,16 @@ class EnsembleMdpPathCollector(PathCollector):
                 #     )
                     sim = False
                     real = False
+
+                    if(num_steps_collected / 2 > num_steps / 5): ##
+                        real = True
+
                     path_len_1 = len(path_sim['actions'])
                     if(path_len_1 != max_path_length and not path_sim['terminals'][-1] and discard_incomplete_paths):
                         print("discard")
                         sim_1 = True
                     path_len_2 = len(path_real['actions'])
-                    if(path_len_2 != max_path_length/5 and not path_real['terminals'][-1] and discard_incomplete_paths):
+                    if(path_len_2 != max_path_length and not path_real['terminals'][-1] and discard_incomplete_paths):
                         print("discard")
                         real = True
             

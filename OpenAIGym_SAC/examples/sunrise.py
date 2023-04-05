@@ -174,7 +174,7 @@ def experiment(variant):
         qf2=L_qf2,
         target_qf1=L_target_qf1,
         target_qf2=L_target_qf2,
-        num_ensemble=NUM_ENSEMBLE,
+        num_ensemble=NUM_ENSEMBLE*2,
         feedback_type=1,
         temperature=variant['temperature'],
         temperature_act=0,

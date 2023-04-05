@@ -755,7 +755,8 @@ def ensemble_eval(
         #     else:
         #         a += _a
         # a = a / num_ensemble
-        a, agent_info = agent[np.random.randint(0,num_ensemble)].get_action(o)
+        # a, agent_info = agent[np.random.randint(0,num_ensemble)].get_action(o)
+        a, agent_info = agent[0].get_action(o)
         next_o, r, d, env_info = env.step(a)
         r_sum += r
         path_length += 1

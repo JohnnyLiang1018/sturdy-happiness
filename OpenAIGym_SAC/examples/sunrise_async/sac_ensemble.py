@@ -447,7 +447,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
             self.diagram_statistics['Weight'].append(np.mean(ptu.get_numpy(weight_target_Q))) ##
 
-            r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
+            r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble) ##
             self.diagram_statistics['R_sum'].append(r_sum) ##
 
             # self.diagram_statistics['Log_pi'].append(log_pi_list) ##
