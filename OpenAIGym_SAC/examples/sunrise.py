@@ -65,7 +65,7 @@ def experiment(variant):
     num_real = 3
 
     expl_env = VectorizedGym()
-    expl_env_sim = gym.make("Pendulum-v1", g=9.75)
+    expl_env_sim = gym.make("Pendulum-v1", g=9.7)
     expl_env_real = gym.make("Pendulum-v1", g=9.8)
     obs_dim = 3
     action_dim = 1
