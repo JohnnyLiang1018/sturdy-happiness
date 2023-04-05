@@ -622,7 +622,7 @@ def ensemble_ucb_rollout(
         actions.append(a_max)
         agent_infos.append(agent_info_max)
         env_infos.append(env_info)
-        mask = torch.bernoulli(torch.Tensor([ber_mean]*num_ensemble))
+        mask = torch.bernoulli(torch.Tensor([ber_mean]*num_ensemble)) ##
         if mask.sum() == 0:
             rand_index = np.random.randint(num_ensemble, size=1)
             mask[rand_index] = 1

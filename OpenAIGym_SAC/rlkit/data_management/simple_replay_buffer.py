@@ -126,7 +126,7 @@ class EnsembleSimpleReplayBuffer(EnsembleReplayBuffer):
         self._env_info_keys = env_info_sizes.keys()
         
         # define mask
-        self._mask = np.zeros((max_replay_buffer_size, num_ensemble))
+        self._mask = np.zeros((max_replay_buffer_size, num_ensemble*2)) ##
         
         self._top = 0
         self._size = 0

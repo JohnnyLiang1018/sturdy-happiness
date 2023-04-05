@@ -156,6 +156,8 @@ class EnsembleMdpPathCollector(PathCollector):
         self._render = render
         self._render_kwargs = render_kwargs
         self.num_ensemble = num_ensemble
+        self.num_sim = int(self.num_ensemble/2) ##
+        self.num_real = int(self.num_ensemble/2) ##
         self.eval_flag = eval_flag
         self.ber_mean = ber_mean
         self.critic1 = critic1
@@ -194,12 +196,12 @@ class EnsembleMdpPathCollector(PathCollector):
                 if self.inference_type > 0: # UCB
                     path_sim = ensemble_ucb_rollout(
                         self._env,
-                        self._policy[:self.num_ensemble], ##
-                        critic1=self.critic1[:self.num_ensemble], ##
-                        critic2=self.critic2[:self.num_ensemble], ##
+                        self._policy[:self.num_sim], ##
+                        critic1=self.critic1[:self.num_sim], ##
+                        critic2=self.critic2[:self.num_sim], ##
                         inference_type=self.inference_type,
                         feedback_type=self.feedback_type,
-                        num_ensemble=self.num_ensemble,
+                        num_ensemble=self.num_sim,  ##
                         noise_flag=self._noise_flag,
                         max_path_length=max_path_length_this_loop,
                         ber_mean=self.ber_mean,
@@ -207,12 +209,12 @@ class EnsembleMdpPathCollector(PathCollector):
 
                     path_real = ensemble_ucb_rollout(
                         self._env_real,
-                        self._policy[self.num_ensemble:], ##
-                        critic1=self.critic1[self.num_ensemble:], ##
-                        critic2=self.critic2[self.num_ensemble:], ##
+                        self._policy[self.num_sim:], ##
+                        critic1=self.critic1[self.num_sim:], ##
+                        critic2=self.critic2[self.num_sim:], ##
                         inference_type=self.inference_type,
                         feedback_type=self.feedback_type,
-                        num_ensemble=self.num_ensemble,
+                        num_ensemble=self.num_real, ##
                         noise_flag=self._noise_flag,
                         max_path_length=max_path_length_this_loop,
                         ber_mean=self.ber_mean,
