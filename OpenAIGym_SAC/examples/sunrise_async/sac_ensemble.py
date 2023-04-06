@@ -151,14 +151,15 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             mean_Q, var_Q = None, None
             L_target_Q = []
 
-            # num_ensemble = 0
-            # if is_sim:
-            #     ensemble = range(self.num_sim)
-            #     num_ensemble = self.num_sim
-            # else:
-            #     ensemble = range(self.num_sim, self.num_sim+self.num_real)
-            #     num_ensemble = self.num_real
-            ensemble = range(self.num_ensemble)
+            num_ensemble = 0
+            if is_sim:
+                ensemble = range(self.num_sim)
+                num_ensemble = self.num_sim
+            else:
+                ensemble = range(self.num_sim, self.num_sim+self.num_real)
+                num_ensemble = self.num_real
+            # ensemble = range(self.num_ensemble)
+            # num_ensemble = self.num_ensemble
 
             for en_index in ensemble:
                 with torch.no_grad():
@@ -175,9 +176,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     L_target_Q.append(target_Q1)
                     L_target_Q.append(target_Q2)
                     if en_index == ensemble.start:
-                        mean_Q = 0.5*(target_Q1 + target_Q2) / self.num_ensemble
+                        mean_Q = 0.5*(target_Q1 + target_Q2) / num_ensemble
                     else:
-                        mean_Q += 0.5*(target_Q1 + target_Q2) / self.num_ensemble
+                        mean_Q += 0.5*(target_Q1 + target_Q2) / num_ensemble
 
 
             for en_index in ensemble:
@@ -187,7 +188,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 else:
                     ## var_Q += (target_Q.detach() - mean_Q)**2
                     var_Q += (L_target_Q[en_index].detach() - mean_Q)**2
-            var_Q = var_Q / self.num_ensemble
+            var_Q = var_Q / num_ensemble
             std_Q_list.append(torch.sqrt(var_Q).detach())
             # std_Q_list[-1] = torch.tensor(1.0) ##
 
@@ -503,27 +504,27 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             std_Q_critic_list = self.corrective_feedback_exp(obs=next_obs, update_type=1, is_sim=True)
 
         else:
-            # rewards_sim = batch_sim['rewards']
-            # rewards_real = batch_real['rewards']
-            # terminals_sim = batch_sim['terminals']
-            # terminals_real = batch_real['terminals']
-            # obs_sim = batch_sim['observations']
-            # obs_real = batch_real['observations']
-            # actions_sim = batch_sim['actions']
-            # actions_real = batch_real['actions']
-            # next_obs_sim = batch_sim['next_observations']
-            # next_obs_real = batch_real['next_observations']
-            # mask_sim = batch_sim['masks']
-            # mask_real = batch_real['masks']
+            rewards_sim = batch_sim['rewards']
+            rewards_real = batch_real['rewards']
+            terminals_sim = batch_sim['terminals']
+            terminals_real = batch_real['terminals']
+            obs_sim = batch_sim['observations']
+            obs_real = batch_real['observations']
+            actions_sim = batch_sim['actions']
+            actions_real = batch_real['actions']
+            next_obs_sim = batch_sim['next_observations']
+            next_obs_real = batch_real['next_observations']
+            mask_sim = batch_sim['masks']
+            mask_real = batch_real['masks']
 
             ## TODO 
-            # std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True)
-            # std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
-            # std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0, is_sim=False)
-            # std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
+            std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True)
+            std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
+            std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0, is_sim=False)
+            std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
 
-            std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
-            std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)
+            # std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
+            # std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)
 
 
         # variables for logging
@@ -544,35 +545,35 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             """
             Policy and Alpha Loss
             """
-            # if tuning == True:
-            #     if en_index < self.num_sim:
-            #         std_Q_actor_list = std_Q_actor_list_sim
-            #         std_Q_critic_list = std_Q_critic_list_sim
+            if tuning == True:
+                if en_index < self.num_sim:
+                    std_Q_actor_list = std_Q_actor_list_sim
+                    std_Q_critic_list = std_Q_critic_list_sim
 
-            #     else:
-            #         std_Q_actor_list = std_Q_actor_list_real
-            #         std_Q_critic_list = std_Q_critic_list_real
+                else:
+                    std_Q_actor_list = std_Q_actor_list_real
+                    std_Q_critic_list = std_Q_critic_list_real
 
-            # else:
-            #     if en_index < self.num_sim:
-            #         obs = obs_sim
-            #         actions = actions_sim
-            #         rewards = rewards_sim
-            #         next_obs = next_obs_sim
-            #         terminals = terminals_sim
-            #         masks = mask_sim
-            #         std_Q_actor_list = std_Q_actor_list_sim
-            #         std_Q_critic_list = std_Q_critic_list_sim
+            else:
+                if en_index < self.num_sim:
+                    obs = obs_sim
+                    actions = actions_sim
+                    rewards = rewards_sim
+                    next_obs = next_obs_sim
+                    terminals = terminals_sim
+                    masks = mask_sim
+                    std_Q_actor_list = std_Q_actor_list_sim
+                    std_Q_critic_list = std_Q_critic_list_sim
 
-            #     else:
-            #         obs = obs_real
-            #         actions = actions_real
-            #         rewards = rewards_real
-            #         next_obs = next_obs_real
-            #         terminals = terminals_real
-            #         masks = mask_real
-            #         std_Q_actor_list = std_Q_actor_list_real
-            #         std_Q_critic_list = std_Q_critic_list_real
+                else:
+                    obs = obs_real
+                    actions = actions_real
+                    rewards = rewards_real
+                    next_obs = next_obs_real
+                    terminals = terminals_real
+                    masks = mask_real
+                    std_Q_actor_list = std_Q_actor_list_real
+                    std_Q_critic_list = std_Q_critic_list_real
 
             
             mask = masks[:,en_index].reshape(-1, 1)

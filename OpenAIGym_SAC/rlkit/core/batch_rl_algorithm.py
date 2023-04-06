@@ -114,16 +114,16 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                         train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
                         tuning = True
                     else:
-                        # train_data_sim = self.replay_buffer.random_batch(self.batch_size)
-                        # train_data_real = self.replay_buffer_real.random_batch(self.batch_size)
-                        train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
-                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
+                        train_data_sim = self.replay_buffer.random_batch(self.batch_size)
+                        train_data_real = self.replay_buffer_real.random_batch(self.batch_size)
+                        # train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
+                        # train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
                         tuning = False
                     # train_data = self.replay_buffer.random_batch(self.batch_size)
                     self.trainer.train_exp(train_data_sim,train_data_real,tuning)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
-            # count += 1
+            count += 1
 
             self._end_epoch(epoch)
             if self.save_frequency > 0:
