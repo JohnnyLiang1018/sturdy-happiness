@@ -484,14 +484,14 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 
         self._n_train_steps_total += 1
 
-    def train_from_torch_exp(self, batch_sim, batch_real, tuning):
-        torch.autograd.set_detect_anomaly(True)
-        rewards = torch.cat((batch_sim['rewards'],batch_real['rewards']))
-        terminals = torch.cat((batch_sim['terminals'], batch_real['terminals']))
-        obs = torch.cat((batch_sim['observations'], batch_real['observations']))
-        actions = torch.cat((batch_sim['actions'], batch_real['actions']))
-        next_obs = torch.cat((batch_sim['next_observations'], batch_real['next_observations']))
-        masks = torch.cat((batch_sim['masks'], batch_real['masks']))
+    def train_from_torch_exp(self, batch_sim, batch_sim_, batch_real, tuning):
+        # torch.autograd.set_detect_anomaly(True)
+        # rewards = torch.cat((batch_sim['rewards'],batch_real['rewards']))
+        # terminals = torch.cat((batch_sim['terminals'], batch_real['terminals']))
+        # obs = torch.cat((batch_sim['observations'], batch_real['observations']))
+        # actions = torch.cat((batch_sim['actions'], batch_real['actions']))
+        # next_obs = torch.cat((batch_sim['next_observations'], batch_real['next_observations']))
+        # masks = torch.cat((batch_sim['masks'], batch_real['masks']))
         
         if tuning == True:
 
@@ -505,23 +505,23 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
         else:
             rewards_sim = batch_sim['rewards']
-            rewards_real = batch_real['rewards']
+            rewards_real = torch.cat((batch_sim_['rewards'],batch_real['rewards']))
             terminals_sim = batch_sim['terminals']
-            terminals_real = batch_real['terminals']
+            terminals_real = torch.cat((batch_sim_['terminals'], batch_real['terminals']))
             obs_sim = batch_sim['observations']
-            obs_real = batch_real['observations']
+            obs_real = torch.cat((batch_sim_['observations'], batch_real['observations']))
             actions_sim = batch_sim['actions']
-            actions_real = batch_real['actions']
+            actions_real = torch.cat((batch_sim_['actions'], batch_real['actions']))
             next_obs_sim = batch_sim['next_observations']
-            next_obs_real = batch_real['next_observations']
+            next_obs_real = torch.cat((batch_sim_['next_observations'], batch_real['next_observations']))
             mask_sim = batch_sim['masks']
-            mask_real = batch_real['masks']
+            mask_real = torch.cat((batch_sim_['masks'], batch_real['masks']))
 
             ## TODO 
             std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True)
             std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
-            std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0, is_sim=False)
-            std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
+            std_Q_actor_list_real = self.corrective_feedback_exp(obs=obs_real, update_type=0, is_sim=False)
+            std_Q_critic_list_real = self.corrective_feedback_exp(obs=next_obs_real, update_type=1, is_sim=False)
 
             # std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
             # std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)
