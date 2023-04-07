@@ -540,8 +540,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             std_Q_actor_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['observations'], update_type=0, is_sim=False)
             std_Q_critic_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['next_observations'], update_type=1, is_sim=False)
 
-            std_Q_actor_list_real = torch.cat((std_Q_actor_list_real_, std_Q_actor_list_sim_))
-            std_Q_critic_list_real = torch.cat((std_Q_critic_list_real_, std_Q_critic_list_sim_))
+            std_Q_actor_list_real = std_Q_actor_list_real_ + std_Q_actor_list_sim_
+            std_Q_critic_list_real = std_Q_critic_list_real_ + std_Q_critic_list_sim_
 
             # std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
             # std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)
@@ -594,7 +594,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 #     masks = mask_real
                 #     std_Q_actor_list = std_Q_actor_list_real
                 #     std_Q_critic_list = std_Q_critic_list_real
-                
+
             if en_index < self.num_sim:
                 obs = obs_sim
                 actions = actions_sim
