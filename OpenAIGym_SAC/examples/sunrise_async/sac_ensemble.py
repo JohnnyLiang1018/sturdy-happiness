@@ -494,14 +494,28 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         # masks = torch.cat((batch_sim['masks'], batch_real['masks']))
         
         if tuning == True:
+            rewards_sim = batch_sim['rewards']
+            rewards_real = torch.cat((batch_sim_['rewards'],batch_real['rewards']))
+            terminals_sim = batch_sim['terminals']
+            terminals_real = torch.cat((batch_sim_['terminals'], batch_real['terminals']))
+            obs_sim = batch_sim['observations']
+            obs_real = torch.cat((batch_sim_['observations'], batch_real['observations']))
+            actions_sim = batch_sim['actions']
+            actions_real = torch.cat((batch_sim_['actions'], batch_real['actions']))
+            next_obs_sim = batch_sim['next_observations']
+            next_obs_real = torch.cat((batch_sim_['next_observations'], batch_real['next_observations']))
+            mask_sim = batch_sim['masks']
+            mask_real = torch.cat((batch_sim_['masks'], batch_real['masks']))
 
             # std_Q_actor_list_sim = self.corrective_feedback_exp(obs=obs, update_type=0,is_sim=True)
             # std_Q_actor_list_real = self.corrective_feedback_exp(obs=obs, update_type=0,is_sim=False)
             # std_Q_critic_list_sim = self.corrective_feedback_exp(obs=next_obs, update_type=1, is_sim=True)
             # std_Q_critic_list_real = self.corrective_feedback_exp(obs=next_obs, update_type=1, is_sim=False)
 
-            std_Q_actor_list = self.corrective_feedback_exp(obs=obs, update_type=0,is_sim=True)
-            std_Q_critic_list = self.corrective_feedback_exp(obs=next_obs, update_type=1, is_sim=True)
+            std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0,is_sim=True)
+            std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)
+            std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0,is_sim=False)
+            std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
 
         else:
             rewards_sim = batch_sim['rewards']
@@ -520,8 +534,14 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             ## TODO 
             std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True)
             std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
-            std_Q_actor_list_real = self.corrective_feedback_exp(obs=obs_real, update_type=0, is_sim=False)
-            std_Q_critic_list_real = self.corrective_feedback_exp(obs=next_obs_real, update_type=1, is_sim=False)
+
+            std_Q_actor_list_real_ = self.corrective_feedback(obs=obs_real, update_type=0, is_sim=False)
+            std_Q_critic_list_real_ = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
+            std_Q_actor_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['observations'], update_type=0, is_sim=False)
+            std_Q_critic_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['next_observations'], update_type=1, is_sim=False)
+
+            std_Q_actor_list_real = torch.cat((std_Q_actor_list_real_, std_Q_actor_list_sim_))
+            std_Q_critic_list_real = torch.cat((std_Q_critic_list_real_, std_Q_critic_list_sim_))
 
             # std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
             # std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)
@@ -529,7 +549,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
         # variables for logging
         tot_qf1_loss, tot_qf2_loss, tot_q1_pred, tot_q2_pred, tot_q_target = 0, 0, 0, 0, 0
-        tot_log_pi, tot_policy_mean, tot_policy_log_std, tot_policy_loss = 0, 0, 0, 0
+        tot_log_pi, tot_policy_mean, tot_policy_log_std, tot_policy_loss, tot_real_policy_loss = 0, 0, 0, 0, 0
         tot_alpha, tot_alpha_loss = 0, 0
 
         # obs_sim = obs[:,:3]
@@ -545,35 +565,55 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             """
             Policy and Alpha Loss
             """
-            if tuning == True:
-                if en_index < self.num_sim:
-                    std_Q_actor_list = std_Q_actor_list_sim
-                    std_Q_critic_list = std_Q_critic_list_sim
+            # if tuning == True:
+            #     if en_index < self.num_sim:
+            #         std_Q_actor_list = std_Q_actor_list_sim
+            #         std_Q_critic_list = std_Q_critic_list_sim
 
-                else:
-                    std_Q_actor_list = std_Q_actor_list_real
-                    std_Q_critic_list = std_Q_critic_list_real
+            #     else:
+            #         std_Q_actor_list = std_Q_actor_list_real
+            #         std_Q_critic_list = std_Q_critic_list_real
+
+            # else:
+                # if en_index < self.num_sim:
+                #     obs = obs_sim
+                #     actions = actions_sim
+                #     rewards = rewards_sim
+                #     next_obs = next_obs_sim
+                #     terminals = terminals_sim
+                #     masks = mask_sim
+                #     std_Q_actor_list = std_Q_actor_list_sim
+                #     std_Q_critic_list = std_Q_critic_list_sim
+
+                # else:
+                #     obs = obs_real
+                #     actions = actions_real
+                #     rewards = rewards_real
+                #     next_obs = next_obs_real
+                #     terminals = terminals_real
+                #     masks = mask_real
+                #     std_Q_actor_list = std_Q_actor_list_real
+                #     std_Q_critic_list = std_Q_critic_list_real
+                
+            if en_index < self.num_sim:
+                obs = obs_sim
+                actions = actions_sim
+                rewards = rewards_sim
+                next_obs = next_obs_sim
+                terminals = terminals_sim
+                masks = mask_sim
+                std_Q_actor_list = std_Q_actor_list_sim
+                std_Q_critic_list = std_Q_critic_list_sim
 
             else:
-                if en_index < self.num_sim:
-                    obs = obs_sim
-                    actions = actions_sim
-                    rewards = rewards_sim
-                    next_obs = next_obs_sim
-                    terminals = terminals_sim
-                    masks = mask_sim
-                    std_Q_actor_list = std_Q_actor_list_sim
-                    std_Q_critic_list = std_Q_critic_list_sim
-
-                else:
-                    obs = obs_real
-                    actions = actions_real
-                    rewards = rewards_real
-                    next_obs = next_obs_real
-                    terminals = terminals_real
-                    masks = mask_real
-                    std_Q_actor_list = std_Q_actor_list_real
-                    std_Q_critic_list = std_Q_critic_list_real
+                obs = obs_real
+                actions = actions_real
+                rewards = rewards_real
+                next_obs = next_obs_real
+                terminals = terminals_real
+                masks = mask_real
+                std_Q_actor_list = std_Q_actor_list_real
+                std_Q_critic_list = std_Q_critic_list_real
 
             
             mask = masks[:,en_index].reshape(-1, 1)
@@ -690,6 +730,11 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             tot_alpha_loss += alpha_loss.item()
             tot_policy_loss = (log_pi - q_new_actions).mean() * (1/self.num_ensemble)
 
+            ## stat for real ensemble
+            if en_index >= self.num_sim:
+                tot_real_policy_loss += (log_pi - q_new_actions).mean() * (1/self.num_real)
+            
+
         """
         Save some statistics for eval
         """
@@ -702,10 +747,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.eval_statistics['QF1 Loss'] = np.mean(ptu.get_numpy(tot_qf1_loss))
             self.eval_statistics['QF2 Loss'] = np.mean(ptu.get_numpy(tot_qf2_loss))
             self.eval_statistics['Policy Loss'] = np.mean(ptu.get_numpy(
-                tot_policy_loss
+                tot_real_policy_loss
             ))
             self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
-                tot_policy_loss
+                tot_real_policy_loss
             ))) ##
             self.diagram_statistics['Weight'].append(np.mean(ptu.get_numpy(weight_target_Q))) ##
 

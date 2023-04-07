@@ -110,13 +110,14 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
 
                 for _ in range(self.num_trains_per_train_loop):
                     if count > self.num_epochs / 2:
-                        train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
-                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
+                        train_data_sim = self.replay_buffer.random_batch(self.batch_size)
+                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size - self.batch_size/3))
+                        train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size/3))
                         tuning = True
                     else:
                         train_data_sim = self.replay_buffer.random_batch(self.batch_size)
-                        train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
-                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
+                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size - self.batch_size/3))
+                        train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size/3))
                         # train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
                         # train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
                         tuning = False
