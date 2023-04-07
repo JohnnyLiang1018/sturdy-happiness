@@ -513,7 +513,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             # std_Q_critic_list_real = self.corrective_feedback_exp(obs=next_obs, update_type=1, is_sim=False)
 
             std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0,is_sim=True)
-            std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)
+            std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
             std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0,is_sim=False)
             std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
 
