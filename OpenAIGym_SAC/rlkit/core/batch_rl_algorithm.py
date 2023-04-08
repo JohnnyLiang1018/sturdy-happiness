@@ -65,7 +65,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             # self.replay_buffer.add_paths(init_expl_paths)
             self.expl_data_collector.end_epoch(-1)
 
-        count = 0 ##
+        count = 1110 ##
         for epoch in gt.timed_for(
                 range(self._start_epoch, self.num_epochs),
                 save_itrs=True,
@@ -111,7 +111,8 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 for _ in range(self.num_trains_per_train_loop):
                     if count > self.num_epochs / 2:
                         train_data_sim = self.replay_buffer.random_batch(self.batch_size)
-                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size - self.batch_size/3))
+                        train_data_real = self.replay_buffer_real.random_batch(self.batch_size)
+                        # train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size - self.batch_size/3))
                         train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size/3))
                         tuning = True
                     else:
