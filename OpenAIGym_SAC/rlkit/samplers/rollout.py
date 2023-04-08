@@ -2,7 +2,6 @@ from statistics import mean
 import numpy as np
 import torch 
 from rlkit.torch import pytorch_util as ptu
-from rlkit.torch.core import np_to_pytorch_batch
 from examples.sunrise_async.collection_request import CollectionRequest
 
 def multitask_rollout(
@@ -757,12 +756,14 @@ def ensemble_eval(
         #         a += _a
         # a = a / num_ensemble
         # a, agent_info = agent[np.random.randint(0,num_ensemble)].get_action(o)
+        obs = ptu.from_numpy(o).float()
+        obs = obs.reshape(1,-1)
         with torch.no_grad():
             a, _, _, new_log_pi, *_ = agent[5](
-                np_to_pytorch_batch(o), reparameterize=True, return_log_prob=True,
+                obs, reparameterize=True, return_log_prob=True,
             )
         # a, agent_info = agent[5].get_action(o)
-        next_o, r, d, env_info = env.step(a)
+        next_o, r, d, env_info = env.step(ptu.get_numpy(a))
         r_sum += r
         path_length += 1
         if d:
@@ -770,8 +771,8 @@ def ensemble_eval(
         o = next_o
         if render:
             env.render(**render_kwargs)
-    print("avg reward", r_sum/path_length)
-    return r_sum/path_length
+    print("avg reward", r_sum[0]/path_length)
+    return r_sum[0]/path_length
 
 
 def ensemble_eval_rollout(
