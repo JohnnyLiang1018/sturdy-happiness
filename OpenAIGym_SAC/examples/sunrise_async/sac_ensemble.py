@@ -492,6 +492,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         # actions = torch.cat((batch_sim['actions'], batch_real['actions']))
         # next_obs = torch.cat((batch_sim['next_observations'], batch_real['next_observations']))
         # masks = torch.cat((batch_sim['masks'], batch_real['masks']))
+
+        
         
         if tuning == True:
             rewards_sim = batch_sim['rewards']
@@ -506,6 +508,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             next_obs_real = batch_real['next_observations']
             mask_sim = batch_sim['masks']
             mask_real = batch_real['masks']
+
 
             # std_Q_actor_list_sim = self.corrective_feedback_exp(obs=obs, update_type=0,is_sim=True)
             # std_Q_actor_list_real = self.corrective_feedback_exp(obs=obs, update_type=0,is_sim=False)
@@ -616,7 +619,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 std_Q_critic_list = std_Q_critic_list_real
 
             
-            mask = masks[:,en_index].reshape(-1, 1)
+            mask = masks[:,(en_index%2)].reshape(-1, 1)
 
             new_obs_actions, policy_mean, policy_log_std, log_pi, *_ = self.policy[en_index](
                 obs, reparameterize=True, return_log_prob=True,
@@ -644,11 +647,11 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 std_Q = std_Q_actor_list[0]
             
             if self.feedback_type == 1 or self.feedback_type == 0:
-                weight_actor_Q = (torch.sigmoid(-std_Q*self.temperature_act) + 0.5).detach()
+                weight_actor_Q = (torch.sigmoid(-std_Q*self.temperature_act) + 0.5)
             else:
-                weight_actor_Q = (2*torch.sigmoid(-std_Q*self.temperature_act)).detach()
+                weight_actor_Q = (2*torch.sigmoid(-std_Q*self.temperature_act))
             # print("Weight_actor_Q", weight_actor_Q)
-            policy_loss = (alpha*log_pi - q_new_actions - self.expl_gamma * std_Q) * mask * weight_actor_Q
+            policy_loss = (alpha*log_pi - q_new_actions - self.expl_gamma * std_Q) * mask * weight_actor_Q.detach()
             policy_loss = policy_loss.sum() / (mask.sum() + 1)
 
             """
@@ -675,7 +678,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             else:
                 if self.feedback_type == 1:
                     # print("std Q", np.mean(ptu.get_numpy(std_Q_critic_list[0])))
-                    weight_target_Q = torch.sigmoid(-std_Q_critic_list[0]*self.temperature) ##
+                    weight_target_Q = torch.sigmoid(-std_Q_critic_list[0]*self.temperature) + 0.5  ##
                     # print("weight Q", np.mean(ptu.get_numpy(weight_target_Q)))
                 else:
                     weight_target_Q = 2*torch.sigmoid(-std_Q_critic_list[0]*self.temperature)

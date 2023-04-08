@@ -237,7 +237,7 @@ if __name__ == "__main__":
         ber_mean=args.ber_mean,
         env=args.env,
         inference_type=1,
-        temperature=40,
+        temperature=20,
         log_dir="",
     )
     

@@ -156,8 +156,8 @@ class EnsembleMdpPathCollector(PathCollector):
         self._render = render
         self._render_kwargs = render_kwargs
         self.num_ensemble = num_ensemble
-        self.num_sim = int(self.num_ensemble/2) ##
-        self.num_real = int(self.num_ensemble/2) ##
+        self.num_sim = 3 ##
+        self.num_real = 3 ##
         self.eval_flag = eval_flag
         self.ber_mean = ber_mean
         self.critic1 = critic1
@@ -201,7 +201,7 @@ class EnsembleMdpPathCollector(PathCollector):
                         critic2=self.critic2[:self.num_sim], ##
                         inference_type=self.inference_type,
                         feedback_type=self.feedback_type,
-                        num_ensemble=self.num_sim,  ##
+                        num_ensemble=self.num_ensemble,  ##
                         noise_flag=self._noise_flag,
                         max_path_length=max_path_length_this_loop,
                         ber_mean=self.ber_mean,
@@ -214,7 +214,7 @@ class EnsembleMdpPathCollector(PathCollector):
                         critic2=self.critic2[self.num_sim:], ##
                         inference_type=self.inference_type,
                         feedback_type=self.feedback_type,
-                        num_ensemble=self.num_real, ##
+                        num_ensemble=self.num_ensemble, ##
                         noise_flag=self._noise_flag,
                         max_path_length=max_path_length_this_loop,
                         ber_mean=self.ber_mean,
