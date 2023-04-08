@@ -2,6 +2,7 @@ from statistics import mean
 import numpy as np
 import torch 
 from rlkit.torch import pytorch_util as ptu
+from rlkit.torch.core import np_to_pytorch_batch
 from examples.sunrise_async.collection_request import CollectionRequest
 
 def multitask_rollout(
@@ -758,7 +759,7 @@ def ensemble_eval(
         # a, agent_info = agent[np.random.randint(0,num_ensemble)].get_action(o)
         with torch.no_grad():
             a, _, _, new_log_pi, *_ = agent[5](
-                o, reparameterize=True, return_log_prob=True,
+                np_to_pytorch_batch(o), reparameterize=True, return_log_prob=True,
             )
         # a, agent_info = agent[5].get_action(o)
         next_o, r, d, env_info = env.step(a)
