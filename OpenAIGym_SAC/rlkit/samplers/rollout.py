@@ -756,7 +756,7 @@ def ensemble_eval(
         #         a += _a
         # a = a / num_ensemble
         # a, agent_info = agent[np.random.randint(0,num_ensemble)].get_action(o)
-        with torch.no_grad:
+        with torch.no_grad():
             a, _, _, new_log_pi, *_ = agent[5](
                 o, reparameterize=True, return_log_prob=True,
             )
