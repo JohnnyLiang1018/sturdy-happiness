@@ -65,7 +65,7 @@ def experiment(variant):
     num_real = 3
 
     expl_env = VectorizedGym()
-    expl_env_sim = gym.make("Pendulum-v1", g=9.7)
+    expl_env_sim = gym.make("Pendulum-v1", g=9.0)
     expl_env_real = gym.make("Pendulum-v1", g=9.8)
     obs_dim = 3
     action_dim = 1
@@ -197,7 +197,7 @@ def experiment(variant):
     
     algorithm.to(ptu.device)
     algorithm.train()
-    with open('stat_stable_onefifth.pickle','wb') as handle:
+    with open('stat_stable_g9.pickle','wb') as handle:
         pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
     # pickle.dumps(L_policy[0])
     # print("success")
