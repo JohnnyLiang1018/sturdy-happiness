@@ -3,11 +3,11 @@ import torch
 import pickle
 import numpy as np
 
-with open('stat_exp5_config3.pickle', 'rb') as handle:
+with open('stat_exp5_cross_std.pickle', 'rb') as handle:
     stat_exp = pickle.load(handle)
     # stat = torch.load(handle,map_location=torch.device('cpu'))
 
-with open('stat_stable.pickle', 'rb') as handle:
+with open('stat_stable2.pickle', 'rb') as handle:
     stat_baseline = pickle.load(handle)
 
 with open('stat_baseline_config2.pickle', 'rb') as handle:
