@@ -49,12 +49,7 @@ class CollectionRequest():
     
     def request(self, agents, env, numEnsemble, max_path_length, iteration):
         models = []
-        # dummy_input = torch.randn(1, 1, 224, 224, requires_grad=True)
-        # torch_model = SuperResolutionNet(upscale_factor=3)
-        # torch_model.eval()
-        # dummy_input = torch.Tensor(env.reset())
         dummy_input = torch.randn(5, requires_grad=True)
-        # torch.onnx.export(torch_model, dummy_input, "alexnet.onnx", verbose=True)
 
         for agent in agents:
             torch.onnx.export(agent, dummy_input, "agent.onnx", verbose=True)
@@ -65,8 +60,6 @@ class CollectionRequest():
         json = {"numEnsemble": numEnsemble, "policy": models, "iteration": iteration, "ep_length": max_path_length}
         response = requests.post(self.server_url,json=json)
         self.topic = response.text
-        print(response)
-        print(response.text)
 
         consumer = KafkaConsumer(
             self.topic,
