@@ -12,6 +12,9 @@ from examples.sunrise_async.sac_ensemble import NeurIPS20SACEnsembleTrainer
 from rlkit.torch.networks import FlattenMlp
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 
+from examples.sunrise_async.mujoco_env.sphero_env import SpheroEnv
+from examples.sunrise_async.physical_sphero_env import PhysicalEnv
+
 import gym
 from examples.sunrise_async.client import Client
 import pickle
@@ -67,10 +70,11 @@ def experiment(variant):
     expl_env = VectorizedGym()
     expl_env_sim = gym.make("Pendulum-v1", g=7.35)
     expl_env_real = gym.make("Pendulum-v1", g=9.8)
+    sphero_env = SpheroEnv("placeholder")
     obs_dim = 3
     action_dim = 1
     # obs_dim = 5
-    # action_dim = 2
+    # action_dim = 1
     
     M = variant['layer_size']
     num_layer = variant['num_layer']
@@ -127,7 +131,7 @@ def experiment(variant):
     eval_path_collector = EnsembleMdpPathCollector(
         client,
         expl_env_sim, ##
-        expl_env_real, ##
+        expl_env_real,  ##
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -161,13 +165,15 @@ def experiment(variant):
 
     replay_buffer_real = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        expl_env_real,
+        expl_env_sim,
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
     
+    # replay_buffer_real.load_buffer(50)
+
     trainer = NeurIPS20SACEnsembleTrainer(
-        env=expl_env_sim,
+        env= expl_env_sim,
         env_real = expl_env_real,
         policy=L_policy,
         qf1=L_qf1,
@@ -196,9 +202,13 @@ def experiment(variant):
     )
     
     algorithm.to(ptu.device)
+    # trainer.load_models(100)
     algorithm.train()
-    with open('stat_stable_1.pickle','wb') as handle:
+    with open('stat_simreal_exp.pickle','wb') as handle:
         pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    trainer.save_models(150)
+    # replay_buffer_real.save_buffer(50)
     # pickle.dumps(L_policy[0])
     # print("success")
 
@@ -213,12 +223,12 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=200,
-            num_eval_steps_per_epoch=1000,
+            num_epochs=150,
+            num_eval_steps_per_epoch=10,
             num_trains_per_train_loop=1000,
             num_expl_steps_per_train_loop=1000,
             min_num_steps_before_training=1000,
-            max_path_length=1000,
+            max_path_length=20,
             batch_size=256,
             save_frequency=args.save_freq,
         ),
@@ -247,7 +257,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, False)
+    ptu.set_gpu_mode(True, True)
     print(sys.version)
     experiment(variant)
 

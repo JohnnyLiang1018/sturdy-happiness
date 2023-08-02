@@ -2,7 +2,9 @@ from statistics import mean
 import numpy as np
 import torch 
 from rlkit.torch import pytorch_util as ptu
-from examples.sunrise_async.collection_request import CollectionRequest
+from examples.sunrise_async.collection_request import ServerRequest
+
+client = ServerRequest()
 
 def multitask_rollout(
         env,
@@ -582,9 +584,9 @@ def ensemble_ucb_rollout(
     agent_infos = []
     env_infos = []
     masks = [] # mask for bootstrapping
-    o = env.reset()
-    for en_index in range(num_ensemble):
-        agent[en_index].reset()
+    o, info = env.reset()
+    # for en_index in range(num_ensemble):
+    #     agent[en_index].reset()
     next_o = None
     path_length = 0
     if render:
@@ -599,7 +601,8 @@ def ensemble_ucb_rollout(
     while path_length < max_path_length:
         a_max, ucb_max, agent_info_max = None, None, None
         for en_index in range(num_ensemble):
-            _a, agent_info = agent[en_index].get_action(o)
+            with torch.no_grad():
+                _a, agent_info = agent[en_index].get_action(o)
             ucb_score = get_ucb_std(o, _a, inference_type, critic1, critic2,
                                     feedback_type, en_index, num_ensemble)
             
@@ -612,8 +615,9 @@ def ensemble_ucb_rollout(
                     ucb_max = ucb_score
                     a_max = _a
                     agent_info_max = agent_info
-
-        next_o, r, d, env_info = env.step(a_max)
+        
+        # a, info = agent[np.random.randint(0, num_ensemble)].get_action(o)
+        next_o, r, d, _, env_info = env.step(a_max)
         if noise_flag == 1:
             r += np.random.normal(0,1,1)[0]
         observations.append(o)
@@ -667,7 +671,8 @@ def ensemble_real_rollout(
         agent,
         num_ensemble,
         num_step,
-        max_path_length=np.inf,
+        max_path_length,
+        ber_mean=0.5,
 ):
 
     observations = []
@@ -676,14 +681,19 @@ def ensemble_real_rollout(
     terminals = []
     agent_infos = []
     env_infos = []
+    masks = []
     o = env.reset()
     for en_index in range(num_ensemble):
         agent[en_index].reset()
     next_o = None
     path_length = 0
-    client = CollectionRequest()
-    observations, actions = client.request(agent,env,1,1,10)
-
+    paths = client.training_request(agent, env, numEnsemble=1,max_path_length=max_path_length, iteration=num_step, ber_mean=ber_mean)
+    # mask = torch.bernoulli(torch.Tensor([ber_mean]*num_ensemble)) ##
+    # if mask.sum() == 0:
+    #     rand_index = np.random.randint(num_ensemble, size=1)
+    #     mask[rand_index] = 1
+    # mask = mask.numpy()
+    # masks.append(mask)
 
     # while path_length < max_path_length:
     #     a = None
@@ -706,28 +716,43 @@ def ensemble_real_rollout(
     #         break
     #     o = next_o
 
-    actions = np.array(actions)
-    if len(actions.shape) == 1:
-        actions = np.expand_dims(actions, 1)
-    observations = np.array(observations)
-    if len(observations.shape) == 1:
-        observations = np.expand_dims(observations, 1)
-        next_o = np.array([next_o])
-    next_observations = np.vstack(
-        (
-            observations[1:, :],
-            np.expand_dims(next_o, 0)
-        )
-    )
-    return dict(
-        observations=observations,
-        actions=actions,
-        rewards=np.array(rewards).reshape(-1, 1),
-        next_observations=next_observations,
-        terminals=np.array(terminals).reshape(-1, 1),
-        agent_infos=agent_infos,
-        env_infos=env_infos,
-    )
+    # actions = np.array(actions)
+    # if len(actions.shape) == 1:
+    #     actions = np.expand_dims(actions, 1)
+    # observations = np.array(observations)
+    # if len(observations.shape) == 1:
+    #     observations = np.expand_dims(observations, 1)
+    #     next_o = np.array([next_o])
+    # masks = np.array(masks)
+    # next_obs = np.array(next_obs)
+    # next_observations = np.vstack(
+    #     (
+    #         observations[1:, :],
+    #         np.expand_dims(next_o, 0)
+    #     )
+    # )
+    # return dict(
+    #     observations=observations,
+    #     actions=actions,
+    #     rewards=np.array(rewards).reshape(-1, 1),
+    #     next_observations=next_obs,
+    #     terminals=np.array(terminals).reshape(-1, 1),
+    #     agent_infos=agent_infos,
+    #     env_infos=env_infos,
+    #     masks=masks,
+    # )
+    return paths
+
+def ensemble_sim_rollout(
+    env,
+    agent,
+    num_ensemble,
+    max_path_length=1000,
+    render_kwargs=None,
+):
+
+    return
+
 def ensemble_eval(
     env,
     agent,
@@ -739,7 +764,7 @@ def ensemble_eval(
     if render_kwargs is None:
         render_kwargs = {}
     r_sum = 0
-    o = env.reset()
+    o, info = env.reset()
     # for en_index in range(num_ensemble):
     #     agent[en_index].reset()
     next_o = None
@@ -760,19 +785,21 @@ def ensemble_eval(
         obs = obs.reshape(1,-1)
         with torch.no_grad():
             a, _, _, new_log_pi, *_ = agent[5](
-                obs, reparameterize=True, return_log_prob=True,
+                obs, deterministic=True
             )
-        # a, agent_info = agent[5].get_action(o)
-        next_o, r, d, env_info = env.step(ptu.get_numpy(a))
+        # a, agent_info = agent[5].get_action(o, deterministic=True)
+        next_o, r, d, _, env_info = env.step(ptu.get_numpy(a)[0])
         r_sum += r
         path_length += 1
         if d:
-            break
+            o, info = env.reset()
+            continue
+
         o = next_o
         if render:
             env.render(**render_kwargs)
-    print("avg reward", r_sum[0]/path_length)
-    return r_sum[0]/path_length
+    print("avg reward", r_sum/path_length)
+    return r_sum/path_length
 
 
 def ensemble_eval_rollout(

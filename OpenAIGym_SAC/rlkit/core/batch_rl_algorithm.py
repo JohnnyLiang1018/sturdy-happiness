@@ -1,10 +1,13 @@
 import abc
+from ensurepip import bootstrap
 
 import gtimer as gt
 from rlkit.core.rl_algorithm import BaseRLAlgorithm
 from rlkit.data_management.replay_buffer import ReplayBuffer
 from rlkit.samplers.data_collector import PathCollector
 import matplotlib.pyplot as plt
+from examples.sunrise_async.collection_request import ServerRequest
+from kafka import KafkaConsumer
 
 class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
     def __init__(
@@ -45,9 +48,18 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
         self.min_num_steps_before_training = min_num_steps_before_training
         self.save_frequency = save_frequency
         self.replay_buffer_real = replay_buffer_real ##
+
+        # Record Training status
+        # self.consumer = KafkaConsumer(
+        #     'trainData',
+        #     bootstrap_servers = ':9092',
+        #     group_id = 'ML',
+        #     client_id = 'ML'
+        # )
         
     def _train(self):
         print("beginning of training")
+        server_request = ServerRequest()
         if self.min_num_steps_before_training > 0:
             print("collect initial path")
             init_expl_paths_sim, init_expl_paths_real = self.expl_data_collector.collect_new_paths(
@@ -72,22 +84,23 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
         ):
             print("Size of real buffer", self.replay_buffer_real.num_steps_can_sample())
             print("Size of sim buffer", self.replay_buffer.num_steps_can_sample())
-            print("start eval collector")
+            # print("start eval collector")
             # self.eval_data_collector.collect_new_paths(
             #     self.max_path_length,
             #     self.num_eval_steps_per_epoch,
             #     discard_incomplete_paths=True,
             # )
-            self.eval_data_collector.collect_new_paths(
-                self.max_path_length,
-                self.num_eval_steps_per_epoch,
-                discard_incomplete_paths=True,
-            )
-            print("end eval collector")
-            gt.stamp('evaluation sampling')
+            # self.eval_data_collector.collect_new_paths(
+            #     self.max_path_length,
+            #     self.num_eval_steps_per_epoch,
+            #     discard_incomplete_paths=True,
+            # )
+            # print("end eval collector")
+            # gt.stamp('evaluation sampling')
             
 
             for _ in range(self.num_train_loops_per_epoch):
+                print("Collecting new samples")
                 new_expl_paths_sim, new_expl_paths_real = self.expl_data_collector.collect_new_paths(
                     self.max_path_length,
                     self.num_expl_steps_per_train_loop,
@@ -102,6 +115,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
 
                 self.replay_buffer.add_paths(new_expl_paths_sim)
                 self.replay_buffer_real.add_paths(new_expl_paths_real)
+                # print(self.replay_buffer_real.get_diagnostics())
                 # self.replay_buffer.add_paths(new_expl_paths)
                 gt.stamp('data storing', unique=False)
 
@@ -116,14 +130,19 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                         train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size/3))
                         tuning = True
                     else:
-                        train_data_sim = self.replay_buffer.random_batch(self.batch_size)
-                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/2))
-                        train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/2))
+                        # print(self.batch_size)
+                        # train_data_sim = self.replay_buffer_real.random_batch(self.batch_size)
+                        # train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/2))
+                        train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
                         # train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
-                        # train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
+                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
                         tuning = False
                     # train_data = self.replay_buffer.random_batch(self.batch_size)
-                    self.trainer.train_exp(train_data_sim, train_data_sim_, train_data_real, tuning)
+                    self.trainer.train_exp(train_data_sim_, train_data_sim_, train_data_real, tuning)
+
+                # server_request.training_data_upload(self.trainer.get_diagram_diagnostics(), epoch)
+                # msg = self.consumer.poll()
+                # print(msg)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
             # count += 1

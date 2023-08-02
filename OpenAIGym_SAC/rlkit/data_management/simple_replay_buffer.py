@@ -139,8 +139,7 @@ class EnsembleSimpleReplayBuffer(EnsembleReplayBuffer):
         self._rewards[self._top] = reward
         self._terminals[self._top] = terminal
         self._next_obs[self._top] = next_observation
-        self._mask[self._top] = mask
-        
+        self._mask[self._top] = mask     
         for key in self._env_info_keys:
             self._env_infos[key][self._top] = env_info[key]
         self._advance()
@@ -204,13 +203,15 @@ class EnsembleSimpleReplayBuffer(EnsembleReplayBuffer):
     def load_buffer(self, epoch):
         path = self.buffer_dir + '/replay_%d.pt' % (epoch)
         payload = torch.load(path)
-        self._observations = payload[0]
-        self._actions = payload[1]
-        self._rewards = payload[2]
-        self._terminals = payload[3]
-        self._next_obs = payload[4]
-        self._mask = payload[5]
         self._size = payload[6]
+        self._observations[:self._size] = payload[0]
+        ## Only take action's column 0: direction
+        self._actions[:self._size] = payload[1][:,:1]
+        self._rewards[:self._size] = payload[2]
+        self._terminals[:self._size] = payload[3]
+        self._next_obs[:self._size] = payload[4]
+        self._mask[:self._size] = payload[5]
+        self._top = self._size
         
 class RandomReplayBuffer(ReplayBuffer):
 

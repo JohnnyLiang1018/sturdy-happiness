@@ -6,6 +6,7 @@ from rlkit.policies.base import ExplorationPolicy, Policy
 from rlkit.torch.core import eval_np
 from rlkit.torch.distributions import TanhNormal
 from rlkit.torch.networks import Mlp
+import rlkit.torch.pytorch_util as ptu
 
 
 LOG_SIG_MAX = 2

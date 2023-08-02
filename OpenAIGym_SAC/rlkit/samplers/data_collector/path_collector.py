@@ -268,11 +268,36 @@ class EnsembleMdpPathCollector(PathCollector):
                     path_sim = None
                     
                     self._num_paths_total += len(path_real)
-                    self._num_paths_total += len(paths_real)
+                    # self._num_paths_total += len(paths_real)
                     self._num_steps_total += num_steps
-                    self._epoch_paths.extend(paths)
+                    self._epoch_paths.extend(path_real)
 
                     return path_sim, path_real
+
+                elif self.inference_type == -2:
+                    path_sim = ensemble_ucb_rollout(
+                        self._env,
+                        self._policy[:self.num_sim], ##
+                        critic1=self.critic1[:self.num_sim], ##
+                        critic2=self.critic2[:self.num_sim], ##
+                        inference_type=1,
+                        feedback_type=self.feedback_type,
+                        num_ensemble=self.num_ensemble,  ##
+                        noise_flag=self._noise_flag,
+                        max_path_length=max_path_length_this_loop,
+                        ber_mean=self.ber_mean,
+                    )
+
+                    sim = False
+
+                    path_len_1 = len(path_sim['actions'])
+                    if(path_len_1 != max_path_length and not path_sim['terminals'][-1] and discard_incomplete_paths):
+                        print("discard")
+                        sim = True
+            
+                    if sim != True:
+                        num_steps_collected += path_len_1
+                        paths_sim.append(path_sim)
 
                 else:
                     path = ensemble_rollout(
