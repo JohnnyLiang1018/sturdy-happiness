@@ -6,7 +6,6 @@ from rlkit.core.rl_algorithm import BaseRLAlgorithm
 from rlkit.data_management.replay_buffer import ReplayBuffer
 from rlkit.samplers.data_collector import PathCollector
 import matplotlib.pyplot as plt
-from examples.sunrise_async.collection_request import ServerRequest
 from kafka import KafkaConsumer
 
 class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
@@ -59,7 +58,6 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
         
     def _train(self):
         print("beginning of training")
-        server_request = ServerRequest()
         if self.min_num_steps_before_training > 0:
             print("collect initial path")
             init_expl_paths_sim, init_expl_paths_real = self.expl_data_collector.collect_new_paths(

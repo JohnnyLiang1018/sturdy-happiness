@@ -584,7 +584,7 @@ def ensemble_ucb_rollout(
     agent_infos = []
     env_infos = []
     masks = [] # mask for bootstrapping
-    o, info = env.reset()
+    o = env.reset()
     # for en_index in range(num_ensemble):
     #     agent[en_index].reset()
     next_o = None
@@ -601,8 +601,7 @@ def ensemble_ucb_rollout(
     while path_length < max_path_length:
         a_max, ucb_max, agent_info_max = None, None, None
         for en_index in range(num_ensemble):
-            with torch.no_grad():
-                _a, agent_info = agent[en_index].get_action(o)
+            _a, agent_info = agent[en_index].get_action(o)
             ucb_score = get_ucb_std(o, _a, inference_type, critic1, critic2,
                                     feedback_type, en_index, num_ensemble)
             
@@ -617,7 +616,7 @@ def ensemble_ucb_rollout(
                     agent_info_max = agent_info
         
         # a, info = agent[np.random.randint(0, num_ensemble)].get_action(o)
-        next_o, r, d, _, env_info = env.step(a_max)
+        next_o, r, d, env_info = env.step(a_max)
         if noise_flag == 1:
             r += np.random.normal(0,1,1)[0]
         observations.append(o)
@@ -764,7 +763,7 @@ def ensemble_eval(
     if render_kwargs is None:
         render_kwargs = {}
     r_sum = 0
-    o, info = env.reset()
+    o = env.reset()
     # for en_index in range(num_ensemble):
     #     agent[en_index].reset()
     next_o = None
@@ -784,22 +783,25 @@ def ensemble_eval(
         obs = ptu.from_numpy(o).float()
         obs = obs.reshape(1,-1)
         with torch.no_grad():
+            # a, _, _, new_log_pi, *_ = agent[5](
+            #     obs, deterministic=True
+            # )
             a, _, _, new_log_pi, *_ = agent[5](
-                obs, deterministic=True
+                obs, reparameterize=True, return_log_prob=True
             )
         # a, agent_info = agent[5].get_action(o, deterministic=True)
-        next_o, r, d, _, env_info = env.step(ptu.get_numpy(a)[0])
+        next_o, r, d, env_info = env.step(ptu.get_numpy(a))
         r_sum += r
         path_length += 1
         if d:
-            o, info = env.reset()
+            o = env.reset()
             continue
 
         o = next_o
         if render:
             env.render(**render_kwargs)
-    print("avg reward", r_sum/path_length)
-    return r_sum/path_length
+    print("avg reward", r_sum[0]/path_length)
+    return r_sum[0]/path_length
 
 
 def ensemble_eval_rollout(

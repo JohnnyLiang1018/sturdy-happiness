@@ -12,7 +12,7 @@ from examples.sunrise_async.sac_ensemble import NeurIPS20SACEnsembleTrainer
 from rlkit.torch.networks import FlattenMlp
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 
-from examples.sunrise_async.mujoco_env.sphero_env import SpheroEnv
+# from examples.sunrise_async.mujoco_env.sphero_env import SpheroEnv
 from examples.sunrise_async.physical_sphero_env import PhysicalEnv
 
 import gym
@@ -70,7 +70,7 @@ def experiment(variant):
     expl_env = VectorizedGym()
     expl_env_sim = gym.make("Pendulum-v1", g=7.35)
     expl_env_real = gym.make("Pendulum-v1", g=9.8)
-    sphero_env = SpheroEnv("placeholder")
+    # sphero_env = SpheroEnv("placeholder")
     obs_dim = 3
     action_dim = 1
     # obs_dim = 5
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=150,
+            num_epochs=200,
             num_eval_steps_per_epoch=10,
             num_trains_per_train_loop=1000,
             num_expl_steps_per_train_loop=1000,
@@ -257,7 +257,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, True)
+    ptu.set_gpu_mode(True, False)
     print(sys.version)
     experiment(variant)
 

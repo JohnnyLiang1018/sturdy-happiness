@@ -273,21 +273,21 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 var_Q_real = (Q_real[en_index].detach() - mean_Q_real)
                 if en_index == 0:
                     ## var_Q = (target_Q.detach() - mean_Q)**2
-                    # var_Q = abs(var_Q_sim * var_Q_real)
-                    var_sum_sim = abs(var_Q_sim)
-                    var_sum_real = abs(var_Q_real)
+                    var_Q = abs(var_Q_sim * var_Q_real)
+                    # var_sum_sim = abs(var_Q_sim)
+                    # var_sum_real = abs(var_Q_real)
 
                 else:
                     ## var_Q += (target_Q.detach() - mean_Q)**2
-                    # var_Q += abs(var_Q_sim * var_Q_real)
-                    var_sum_sim += abs(var_Q_sim)
-                    var_sum_real += abs(var_Q_real)
+                    var_Q += abs(var_Q_sim * var_Q_real)
+                    # var_sum_sim += abs(var_Q_sim)
+                    # var_sum_real += abs(var_Q_real)
             
-            # var_Q = var_Q / len(Q_sim)
+            var_Q = var_Q / len(Q_sim)
             # print("var Q", np.mean(ptu.get_numpy(var_Q)))
-            var_sum_sim = var_sum_sim / self.num_sim
-            var_sum_real = var_sum_real / self.num_real
-            var_Q = var_sum_sim * var_sum_real
+            # var_sum_sim = var_sum_sim / self.num_sim
+            # var_sum_real = var_sum_real / self.num_real
+            # var_Q = var_sum_sim * var_sum_real
             std_Q_list.append(torch.sqrt(var_Q).detach())
                 # std_Q_list[-1] = torch.tensor(1.0) ##
 
