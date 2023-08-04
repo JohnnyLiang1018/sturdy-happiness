@@ -68,7 +68,8 @@ def experiment(variant):
     expl_env = VectorizedGym()
     expl_env_sim = gym.make("Pendulum-v1", g=7.35)
     expl_env_real = gym.make("Pendulum-v1", g=9.8)
-    sphero_env = SpheroEnv("Placeholder")
+    sphero_env_sim = SpheroEnv("Placeholder")
+    sphero_env_real = SpheroEnv("Placeholder")
     # obs_dim = 3
     # action_dim = 1
     obs_dim = 5
@@ -128,8 +129,8 @@ def experiment(variant):
     
     eval_path_collector = EnsembleMdpPathCollector(
         client,
-        sphero_env, ##
-        sphero_env, ##
+        sphero_env_sim, ##
+        sphero_env_real, ##
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -142,8 +143,8 @@ def experiment(variant):
     
     expl_path_collector = EnsembleMdpPathCollector(
         client,
-        sphero_env, ##
-        sphero_env,  ##
+        sphero_env_sim, ##
+        sphero_env_real,  ##
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -156,23 +157,23 @@ def experiment(variant):
     
     replay_buffer_sim = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        sphero_env, 
+        sphero_env_sim, 
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
 
     replay_buffer_real = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        sphero_env,
+        sphero_env_real,
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
 
-    replay_buffer_real.load_buffer(50)
+    # replay_buffer_real.load_buffer(100)
     
     trainer = NeurIPS20SACEnsembleTrainer(
-        env = sphero_env,
-        env_real = sphero_env,
+        env = sphero_env_sim,
+        env_real = sphero_env_real,
         policy=L_policy,
         qf1=L_qf1,
         qf2=L_qf2,
@@ -190,8 +191,8 @@ def experiment(variant):
     )
     algorithm = TorchBatchRLAlgorithm(
         trainer=trainer,
-        exploration_env=sphero_env,
-        evaluation_env=sphero_env,
+        exploration_env=sphero_env_sim,
+        evaluation_env=sphero_env_real,
         exploration_data_collector=expl_path_collector,
         evaluation_data_collector=eval_path_collector,
         replay_buffer=replay_buffer_sim,

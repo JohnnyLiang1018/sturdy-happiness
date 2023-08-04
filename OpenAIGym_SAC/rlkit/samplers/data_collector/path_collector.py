@@ -144,7 +144,7 @@ class EnsembleMdpPathCollector(PathCollector):
             critic2=None,
             inference_type=0.0,
             feedback_type=1,
-            use_static_real_replay=True
+            use_static_real_replay=False
     ):
         if render_kwargs is None:
             render_kwargs = {}
@@ -251,7 +251,7 @@ class EnsembleMdpPathCollector(PathCollector):
                      
                     if self.use_static_real_replay:
                         real = True
-                        
+
                     else:
                         path_len_2 = len(path_real['actions'])
                         if(path_len_2 != max_path_length and not path_real['terminals'][-1] and discard_incomplete_paths):
