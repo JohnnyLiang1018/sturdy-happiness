@@ -144,6 +144,7 @@ class EnsembleMdpPathCollector(PathCollector):
             critic2=None,
             inference_type=0.0,
             feedback_type=1,
+            use_static_real_replay=True
     ):
         if render_kwargs is None:
             render_kwargs = {}
@@ -165,6 +166,7 @@ class EnsembleMdpPathCollector(PathCollector):
         self.inference_type = inference_type
         self.feedback_type = feedback_type
         self._noise_flag = noise_flag
+        self.use_static_real_replay = use_static_real_replay
         
         self._num_steps_total = 0
         self._num_paths_total = 0
@@ -206,19 +208,21 @@ class EnsembleMdpPathCollector(PathCollector):
                         max_path_length=max_path_length_this_loop,
                         ber_mean=self.ber_mean,
                     )
-
-                    path_real = ensemble_ucb_rollout(
-                        self._env_real,
-                        self._policy[self.num_sim:], ##
-                        critic1=self.critic1[self.num_sim:], ##
-                        critic2=self.critic2[self.num_sim:], ##
-                        inference_type=self.inference_type,
-                        feedback_type=self.feedback_type,
-                        num_ensemble=self.num_ensemble, ##
-                        noise_flag=self._noise_flag,
-                        max_path_length=max_path_length_this_loop,
-                        ber_mean=self.ber_mean,
-                    )
+                    if self.use_static_real_replay != True:
+                        path_real = ensemble_ucb_rollout(
+                            self._env_real,
+                            self._policy[self.num_sim:], ##
+                            critic1=self.critic1[self.num_sim:], ##
+                            critic2=self.critic2[self.num_sim:], ##
+                            inference_type=self.inference_type,
+                            feedback_type=self.feedback_type,
+                            num_ensemble=self.num_ensemble, ##
+                            noise_flag=self._noise_flag,
+                            max_path_length=max_path_length_this_loop,
+                            ber_mean=self.ber_mean,
+                        )
+                    else:
+                        path_real = None
 
                 # if self.inference_type > 0: # UCB
                 #     sim_1_path, sim_2_path, real_path = ensemble_ucb_rollout(
@@ -242,12 +246,17 @@ class EnsembleMdpPathCollector(PathCollector):
 
                     path_len_1 = len(path_sim['actions'])
                     if(path_len_1 != max_path_length and not path_sim['terminals'][-1] and discard_incomplete_paths):
-                        print("discard")
+                        print("sim discard")
                         sim_1 = True
-                    path_len_2 = len(path_real['actions'])
-                    if(path_len_2 != max_path_length and not path_real['terminals'][-1] and discard_incomplete_paths):
-                        print("discard")
+                     
+                    if self.use_static_real_replay:
                         real = True
+                        
+                    else:
+                        path_len_2 = len(path_real['actions'])
+                        if(path_len_2 != max_path_length and not path_real['terminals'][-1] and discard_incomplete_paths):
+                            print("real discard")
+                            real = True
             
                     if sim != True:
                         num_steps_collected += path_len_1

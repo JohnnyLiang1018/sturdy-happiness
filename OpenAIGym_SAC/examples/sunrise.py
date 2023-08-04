@@ -11,6 +11,7 @@ from examples.sunrise_async.VectorizedGym import VectorizedGym
 from examples.sunrise_async.sac_ensemble import NeurIPS20SACEnsembleTrainer
 from rlkit.torch.networks import FlattenMlp
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
+from examples.sunrise_async.mujoco_env.sphero_env import SpheroEnv
 
 import gym
 from examples.sunrise_async.client import Client
@@ -67,10 +68,11 @@ def experiment(variant):
     expl_env = VectorizedGym()
     expl_env_sim = gym.make("Pendulum-v1", g=7.35)
     expl_env_real = gym.make("Pendulum-v1", g=9.8)
-    obs_dim = 3
+    sphero_env = SpheroEnv("Placeholder")
+    # obs_dim = 3
+    # action_dim = 1
+    obs_dim = 5
     action_dim = 1
-    # obs_dim = 5
-    # action_dim = 2
     
     M = variant['layer_size']
     num_layer = variant['num_layer']
@@ -126,8 +128,8 @@ def experiment(variant):
     
     eval_path_collector = EnsembleMdpPathCollector(
         client,
-        expl_env_sim, ##
-        expl_env_real, ##
+        sphero_env, ##
+        sphero_env, ##
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -140,8 +142,8 @@ def experiment(variant):
     
     expl_path_collector = EnsembleMdpPathCollector(
         client,
-        expl_env_sim, ##
-        expl_env_real,  ##
+        sphero_env, ##
+        sphero_env,  ##
         L_policy,
         NUM_ENSEMBLE,
         ber_mean=variant['ber_mean'],
@@ -154,21 +156,23 @@ def experiment(variant):
     
     replay_buffer_sim = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        expl_env_sim, 
+        sphero_env, 
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
 
     replay_buffer_real = EnsembleEnvReplayBuffer(
         variant['replay_buffer_size'],
-        expl_env_real,
+        sphero_env,
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
+
+    replay_buffer_real.load_buffer(50)
     
     trainer = NeurIPS20SACEnsembleTrainer(
-        env=expl_env_sim,
-        env_real = expl_env_real,
+        env = sphero_env,
+        env_real = sphero_env,
         policy=L_policy,
         qf1=L_qf1,
         qf2=L_qf2,
@@ -186,8 +190,8 @@ def experiment(variant):
     )
     algorithm = TorchBatchRLAlgorithm(
         trainer=trainer,
-        exploration_env=expl_env_sim,
-        evaluation_env=expl_env_real,
+        exploration_env=sphero_env,
+        evaluation_env=sphero_env,
         exploration_data_collector=expl_path_collector,
         evaluation_data_collector=eval_path_collector,
         replay_buffer=replay_buffer_sim,
@@ -247,7 +251,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, False)
+    ptu.set_gpu_mode(True, True)
     print(sys.version)
     experiment(variant)
 

@@ -61,7 +61,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             #     discard_incomplete_paths=False,
             # )
             self.replay_buffer.add_paths(init_expl_paths_sim)
-            self.replay_buffer_real.add_paths(init_expl_paths_real)
+            # self.replay_buffer_real.add_paths(init_expl_paths_real)
             # self.replay_buffer.add_paths(init_expl_paths)
             self.expl_data_collector.end_epoch(-1)
 
@@ -101,7 +101,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 gt.stamp('exploration sampling', unique=False)
 
                 self.replay_buffer.add_paths(new_expl_paths_sim)
-                self.replay_buffer_real.add_paths(new_expl_paths_real)
+                # self.replay_buffer_real.add_paths(new_expl_paths_real)
                 # self.replay_buffer.add_paths(new_expl_paths)
                 gt.stamp('data storing', unique=False)
 
@@ -117,8 +117,8 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                         tuning = True
                     else:
                         train_data_sim = self.replay_buffer.random_batch(self.batch_size)
-                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/2))
-                        train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/2))
+                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
+                        train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
                         # train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
                         # train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
                         tuning = False

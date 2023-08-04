@@ -771,8 +771,8 @@ def ensemble_eval(
         o = next_o
         if render:
             env.render(**render_kwargs)
-    print("avg reward", r_sum[0]/path_length)
-    return r_sum[0]/path_length
+    print("avg reward", r_sum/path_length)
+    return r_sum/path_length
 
 
 def ensemble_eval_rollout(
