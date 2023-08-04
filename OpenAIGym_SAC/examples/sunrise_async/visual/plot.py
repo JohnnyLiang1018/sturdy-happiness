@@ -4,7 +4,7 @@ import torch
 import pickle
 import numpy as np
 
-with open('stat_sim_pen_exp.pickle', 'rb') as handle:
+with open('stat_stable_1.pickle', 'rb') as handle:
     stat_exp = pickle.load(handle)
 
 with open('stat_baseline.pickle', 'rb') as handle:
