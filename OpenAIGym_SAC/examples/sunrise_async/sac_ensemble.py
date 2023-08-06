@@ -123,6 +123,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.diagram_statistics.update({'Std_q': []}) ##
         self.diagram_statistics.update({'Log_pi': []}) ##
         self.diagram_statistics.update({"Q_action": []}) ##
+        self.diagram_statistics.update({'Critic_loss': []}) ##
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
@@ -552,7 +553,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
         # variables for logging
         tot_qf1_loss, tot_qf2_loss, tot_q1_pred, tot_q2_pred, tot_q_target = 0, 0, 0, 0, 0
-        tot_log_pi, tot_policy_mean, tot_policy_log_std, tot_policy_loss, tot_real_policy_loss = 0, 0, 0, 0, 0
+        tot_log_pi, tot_policy_mean, tot_policy_log_std, tot_policy_loss, tot_real_policy_loss, tot_real_qf_loss = 0, 0, 0, 0, 0, 0
         tot_alpha, tot_alpha_loss = 0, 0
 
         # obs_sim = obs[:,:3]
@@ -736,7 +737,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             ## stat for real ensemble
             if en_index >= self.num_sim:
                 tot_real_policy_loss += (log_pi - q_new_actions).mean() * (1/self.num_real)
-            
+                tot_real_qf_loss += (qf1_loss + qf2_loss).mean() / 2 * (1/self.num_real)
 
         """
         Save some statistics for eval
@@ -755,6 +756,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             self.diagram_statistics['Policy_loss'].append(np.mean(ptu.get_numpy(
                 tot_real_policy_loss
             ))) ##
+            self.diagram_statistics['Critic_loss'].append(np.mean(ptu.get_numpy(
+                tot_real_qf_loss
+            )))
             self.diagram_statistics['Weight'].append(np.mean(ptu.get_numpy(weight_target_Q))) ##
 
             r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
