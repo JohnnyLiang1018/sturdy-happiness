@@ -124,6 +124,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.diagram_statistics.update({'Log_pi': []}) ##
         self.diagram_statistics.update({"Q_action": []}) ##
         self.diagram_statistics.update({'Critic_loss': []}) ##
+        self.diagram_statistics.update({'alpha_logpi': []}) ##
+        self.diagram_statistics.update({'alpha': []}) ##
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 

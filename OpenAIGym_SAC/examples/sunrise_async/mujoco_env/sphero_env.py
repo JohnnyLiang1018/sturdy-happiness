@@ -377,6 +377,20 @@ class SpheroEnv(gym.Env):
 	def render(self):
 		return self.render_it()
 
+	def set_initial_position(self, agent_x, agent_y, target_x, target_y):
+		self.agent_x = agent_x
+		self.agent_y = agent_y
+		self.target_x = target_x
+		self.target_y = target_y
+		# agent_x, agent_y, agent_z = self.data.xpos[2]
+		# target_x, target_y, target_z = self.data.xpos[3]
+		# self.data.xpos[2] = [self.agent_x, self.agent_y, agent_z]
+		# self.data.xpos[3] = [self.target_x, self.target_y, target_z]
+		self.data.qpos[:2] = [self.agent_x, self.agent_y]
+		self.data.qpos[7:9] = [self.target_x, self.target_y]
+		mj.mj_forward(self.model, self.data)
+
+
 	def xy_normalize(self, agent_x, agent_y, target_x, target_y):
 		agent_x += 7.65
 		agent_y += 7.65
@@ -832,3 +846,11 @@ def render_it(env):
 # 	print(f"Episode {i+1} has the score of: {score} ")
 # 	if i%50==0 and i!=0:
 # 		agent.save(f"kicha_{i}")
+
+env = SpheroEnv("placehold")
+env.reset()
+env.set_initial_position(-5.5943, 5.3157, 4.0357, -3.7475)
+print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
+print("Xpos", env.data.xpos[2], env.data.xpos[3])
+obs, reward, done, _ = env.step([0.7714])
+print(obs, reward)

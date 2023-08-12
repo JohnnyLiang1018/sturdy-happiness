@@ -144,7 +144,7 @@ class EnsembleMdpPathCollector(PathCollector):
             critic2=None,
             inference_type=0.0,
             feedback_type=1,
-            use_static_real_replay=False
+            use_static_real_replay=True
     ):
         if render_kwargs is None:
             render_kwargs = {}
@@ -163,7 +163,7 @@ class EnsembleMdpPathCollector(PathCollector):
         self.ber_mean = ber_mean
         self.critic1 = critic1
         self.critic2 = critic2
-        self.inference_type = inference_type
+        self.inference_type = -1
         self.feedback_type = feedback_type
         self._noise_flag = noise_flag
         self.use_static_real_replay = use_static_real_replay
