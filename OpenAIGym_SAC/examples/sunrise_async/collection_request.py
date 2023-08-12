@@ -54,7 +54,7 @@ class ServerRequest():
 
         self.consumer = KafkaConsumer(
             bootstrap_servers=':9092',
-            group_id = "robot"
+            group_id = "robot-test"
         )
     
     def training_request(self, agents, env, numEnsemble, max_path_length, iteration, ber_mean):
@@ -104,7 +104,7 @@ class ServerRequest():
             mask = mask.numpy()
             masks.append(mask)
 
-            actions = json['actions']
+            actions = json['actions'][:,:1]
             next_obs = json['next_obs']
             rewards = json['rewards']
             terminals = json['dones']

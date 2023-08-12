@@ -70,10 +70,11 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             #     self.min_num_steps_before_training,
             #     discard_incomplete_paths=False,
             # )
-            self.replay_buffer.add_paths(init_expl_paths_sim)
+            # self.replay_buffer.add_paths(init_expl_paths_sim)
             self.replay_buffer_real.add_paths(init_expl_paths_real)
             # self.replay_buffer.add_paths(init_expl_paths)
             self.expl_data_collector.end_epoch(-1)
+            self.replay_buffer_real.save_buffer(5)
 
         count = 0 ##
         for epoch in gt.timed_for(
@@ -111,7 +112,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 # )
                 gt.stamp('exploration sampling', unique=False)
 
-                self.replay_buffer.add_paths(new_expl_paths_sim)
+                # self.replay_buffer.add_paths(new_expl_paths_sim)
                 self.replay_buffer_real.add_paths(new_expl_paths_real)
                 # print(self.replay_buffer_real.get_diagnostics())
                 # self.replay_buffer.add_paths(new_expl_paths)
@@ -131,7 +132,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                         # print(self.batch_size)
                         # train_data_sim = self.replay_buffer_real.random_batch(self.batch_size)
                         # train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/2))
-                        train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
+                        train_data_sim_ = self.replay_buffer_real.random_batch(round(self.batch_size - self.batch_size/3))
                         # train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
                         train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
                         tuning = False

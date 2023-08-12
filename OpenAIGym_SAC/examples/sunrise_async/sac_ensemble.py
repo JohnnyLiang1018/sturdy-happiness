@@ -777,8 +777,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             )))
             self.diagram_statistics['Weight'].append(np.mean(ptu.get_numpy(weight_target_Q))) ##
 
-            r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=10) ##
-            self.diagram_statistics['R_sum'].append(r_sum) ##
+            # r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=10) ##
+            # self.diagram_statistics['R_sum'].append(r_sum) ##
             self.diagram_statistics['Std_q'].append(np.mean(ptu.get_numpy(self.expl_gamma * std_Q))) ##
             self.diagram_statistics['Q_action'].append(np.mean(ptu.get_numpy(q_new_actions))) ##
             self.diagram_statistics['Log_pi'].append(np.mean(ptu.get_numpy(alpha*log_pi))) ##

@@ -346,7 +346,7 @@ class SpheroEnv(gym.Env):
 		done = self.get_done()
 		# print("Done", done)
 
-		return obs, reward*10, done, {}, {}
+		return obs, reward*10, done, {}
 
 	def reset(self):
 		#start_agent_x=random.uniform(-45, 45)
@@ -372,7 +372,7 @@ class SpheroEnv(gym.Env):
 		rewards = []
 		done = []
 		next_states = []
-		return obs, info
+		return obs
 	
 	def render(self):
 		return self.render_it()
