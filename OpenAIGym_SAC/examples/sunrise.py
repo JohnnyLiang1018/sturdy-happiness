@@ -169,7 +169,7 @@ def experiment(variant):
         log_dir=variant['log_dir'],
     )
 
-    replay_buffer_real.load_buffer(100)
+    replay_buffer_real.load_buffer(5)
     
     trainer = NeurIPS20SACEnsembleTrainer(
         env = sphero_env_sim,
