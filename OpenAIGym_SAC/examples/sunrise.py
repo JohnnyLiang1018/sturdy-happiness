@@ -170,7 +170,7 @@ def experiment(variant):
         log_dir=variant['log_dir'],
     )
     
-    # replay_buffer_real.load_buffer(50)
+    replay_buffer_real.load_buffer(10)
 
     trainer = NeurIPS20SACEnsembleTrainer(
         env= sphero_env,
@@ -207,8 +207,8 @@ def experiment(variant):
     # with open('stat_simreal_exp.pickle','wb') as handle:
     #     pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
     
-    trainer.save_models(150)
-    replay_buffer_real.save_buffer(5)
+    trainer.save_models(20)
+    replay_buffer_real.save_buffer(20)
     # pickle.dumps(L_policy[0])
     # print("success")
 
@@ -223,14 +223,14 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=5,
+            num_epochs=20,
             num_eval_steps_per_epoch=10,
             num_trains_per_train_loop=100,
             num_expl_steps_per_train_loop=50,
-            min_num_steps_before_training=50,
+            min_num_steps_before_training=100,
             max_path_length=10,
             batch_size=16,
-            save_frequency=args.save_freq,
+            save_frequency=5,
         ),
         trainer_kwargs=dict(
             discount=0.99,

@@ -97,12 +97,13 @@ class ServerRequest():
             json = pickle.loads(reading)
             masks = []
             obs = json['states']
-            mask = torch.bernoulli(torch.Tensor([ber_mean]*numEnsemble)) ##
-            if mask.sum() == 0:
-                rand_index = np.random.randint(numEnsemble, size=1)
-                mask[rand_index] = 1
-            mask = mask.numpy()
-            masks.append(mask)
+            for i in range(len(obs)):
+                mask = torch.bernoulli(torch.Tensor([ber_mean]*numEnsemble)) ##
+                if mask.sum() == 0:
+                    rand_index = np.random.randint(numEnsemble, size=1)
+                    mask[rand_index] = 1
+                mask = mask.numpy()
+                masks.append(mask)
 
             actions = json['actions'][:,:1]
             next_obs = json['next_obs']
