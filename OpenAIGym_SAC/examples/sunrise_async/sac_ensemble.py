@@ -129,7 +129,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
-    def corrective_feedback(self, obs, update_type, is_sim):
+    def corrective_feedback(self, obs, update_type, is_sim, all_ensemble=False):
         std_Q_list = []
         # obs_sim = obs[:,:3]
         # obs_real = obs[:,3:]
@@ -155,7 +155,11 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             L_target_Q = []
 
             num_ensemble = 0
-            if is_sim:
+            if all_ensemble:
+                ensemble = range(0, self.num_sim+self.num_real)
+                num_ensemble = self.num_sim + self.num_real
+
+            elif is_sim:
                 ensemble = range(self.num_sim)
                 num_ensemble = self.num_sim
             else:
@@ -487,7 +491,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 
         self._n_train_steps_total += 1
 
-    def train_from_torch_exp(self, batch_sim, batch_sim_, batch_real, tuning):
+    def train_from_torch_exp(self, batch_sim, batch_sim_, batch_real, tuning, old_appr):
         # torch.autograd.set_detect_anomaly(True)
         # rewards = torch.cat((batch_sim['rewards'],batch_real['rewards']))
         # terminals = torch.cat((batch_sim['terminals'], batch_real['terminals']))
@@ -541,13 +545,18 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True)
             std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
 
-            std_Q_actor_list_real_ = self.corrective_feedback(obs=batch_real['observations'], update_type=0, is_sim=False)
-            std_Q_critic_list_real_ = self.corrective_feedback(obs=batch_real['next_observations'], update_type=1, is_sim=False)
-            std_Q_actor_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['observations'], update_type=0, is_sim=False)
-            std_Q_critic_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['next_observations'], update_type=1, is_sim=False)
 
-            std_Q_actor_list_real = [torch.cat((std_Q_actor_list_sim_[0], std_Q_actor_list_real_[0]))]
-            std_Q_critic_list_real = [torch.cat((std_Q_critic_list_sim_[0], std_Q_critic_list_real_[0]))]
+            if old_appr == True:
+                std_Q_actor_list_real = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=False, all_ensemble=True)
+                std_Q_critic_list_real = self.corrective_feedback(obs=obs_sim, update_type=1, is_sim=False, all_ensemble=True)
+            else:
+                std_Q_actor_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['observations'], update_type=0, is_sim=False)
+                std_Q_critic_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['next_observations'], update_type=1, is_sim=False)
+                std_Q_actor_list_real_ = self.corrective_feedback(obs=batch_real['observations'], update_type=0, is_sim=False)
+                std_Q_critic_list_real_ = self.corrective_feedback(obs=batch_real['next_observations'], update_type=1, is_sim=False)
+                
+                std_Q_actor_list_real = [torch.cat((std_Q_actor_list_sim_[0], std_Q_actor_list_real_[0]))]
+                std_Q_critic_list_real = [torch.cat((std_Q_critic_list_sim_[0], std_Q_critic_list_real_[0]))]
 
             # std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
             # std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)

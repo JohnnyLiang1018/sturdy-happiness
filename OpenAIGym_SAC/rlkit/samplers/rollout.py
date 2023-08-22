@@ -767,7 +767,8 @@ def ensemble_eval(
         r_sum += r
         path_length += 1
         if d:
-            break
+            o = env.reset()
+            continue
         o = next_o
         if render:
             env.render(**render_kwargs)

@@ -3,7 +3,7 @@ import torch
 import pickle
 import numpy as np
 
-with open('stat_stable_sim_2.pickle', 'rb') as handle:
+with open('stat_stable_simreal_old.pickle', 'rb') as handle:
     stat_exp = pickle.load(handle)
 
 with open('stat_exp5_cross_std.pickle', 'rb') as handle:
@@ -34,13 +34,13 @@ with open('stat_stable_075g.pickle', 'rb') as handle:
 # plt.ylabel("Q value")
 
 # plt.plot(stat_exp['Critic_loss'])
-plt.plot(stat_exp['Q_action'])
+# plt.plot(stat_exp['Q_action'])
 # plt.plot(stat_exp['Log_pi'])
 
 # num_slices = 20
-slice_len = 5
+slice_len = 1
 # baseline = [np.mean(stat_baseline['R_sum'][i:i+slice_len]) for i in range(0,200,slice_len)]
-# exp = [np.mean(stat_exp['R_sum'][i:i+slice_len]) for i in range(0,130,slice_len)]
+exp = [np.mean(stat_exp['R_sum'][i:i+slice_len]) for i in range(0,130,slice_len)]
 # baseline_cf2 = [np.mean(stat_baseline_cf2['R_sum'][i:i+slice_len]) for i in range(0,200,slice_len)]
 # exp_cf2 = [np.mean(stat_exp_cf2['R_sum'][i:i+slice_len]) for i in range(0,200,slice_len)]
 # exp_cf3 = [np.mean(stat_exp_cf3['R_sum'][i:i+slice_len]) for i in range(0,200,slice_len)]
@@ -49,7 +49,7 @@ slice_len = 5
 # plt.plot(exp_cf2, label='0.75g')
 # plt.plot(baseline_cf2, label='0.75g')
 # plt.plot(baseline, label='baseline')
-# plt.plot(exp, label='0.75g')
+plt.plot(exp, label='0.75g')
 # plt.plot(exp_cf3, label='0.75g')
 # plt.plot(exp_g9, label='0.75g')
 # plt.ylabel("Reward")
