@@ -67,7 +67,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.temperature = temperature
         self.temperature_act = temperature_act
         self.expl_gamma = expl_gamma
-        self.model_dir = log_dir + '/model/'
+        self.model_dir = log_dir + '/model/model'
         self.num_sim = num_sim ##
         self.num_real = num_real ##
         
@@ -865,19 +865,19 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
     def load_models(self, step):
         for en_index in range(self.num_ensemble):
             self.policy[en_index].load_state_dict(
-                torch.load('%s/%d_th_actor_%s.pt' % (self.model_dir, en_index, step))
+                torch.load('%s/%d_th_actor_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
             )
             self.qf1[en_index].load_state_dict(
-                torch.load('%s/%d_th_1st_critic_%s.pt' % (self.model_dir, en_index, step))
+                torch.load('%s/%d_th_1st_critic_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
             )
             self.qf2[en_index].load_state_dict(
-                torch.load('%s/%d_th_2nd_critic_%s.pt' % (self.model_dir, en_index, step))
+                torch.load('%s/%d_th_2nd_critic_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
             )
             self.target_qf1[en_index].load_state_dict(
-                torch.load('%s/%d_th_1st_target_critic_%s.pt' % (self.model_dir, en_index, step))
+                torch.load('%s/%d_th_1st_target_critic_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
             )
             self.target_qf2[en_index].load_state_dict(
-                torch.load('%s/%d_th_2nd_target_critic_%s.pt' % (self.model_dir, en_index, step))
+                torch.load('%s/%d_th_2nd_target_critic_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
             )
             
             

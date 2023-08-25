@@ -26,7 +26,7 @@ with open('stat_stable_075g.pickle', 'rb') as handle:
 # plt.ylabel("Log pi")
 
 # plt.plot(stat_baseline['Policy_loss'], label='Policy loss')
-plt.plot(stat_exp['Policy_loss'], label='Policy loss')
+# plt.plot(stat_exp['Policy_loss'], label='Policy loss')
 # plt.plot(stat_exp_cf2['Policy_loss'], label='exp_config2')
 # plt.plot(stat_baseline_cf2['Policy_loss'], label='baseline_config2')
 # plt.ylabel("Policy loss")
@@ -35,9 +35,9 @@ plt.plot(stat_exp['Policy_loss'], label='Policy loss')
 # plt.ylabel("Q value")
 
 num_slices = 10
-slice_len = 3
+slice_len = 1
 # baseline = [np.mean(stat_baseline['R_sum'][i:i+slice_len]) for i in range(0,200,slice_len)]
-# exp = [np.mean(stat_exp['R_sum'][i:i+slice_len]) for i in range(0,200,slice_len)]
+exp = [np.mean(stat_exp['R_sum'][i:i+slice_len]) for i in range(0,1000,slice_len)]
 # baseline_cf2 = [np.mean(stat_baseline_cf2['R_sum'][i:i+slice_len]) for i in range(0,200,slice_len)]
 # exp_cf2 = [np.mean(stat_exp_cf2['R_sum'][i:i+slice_len]) for i in range(0,200,slice_len)]
 # exp_cf3 = [np.mean(stat_exp_cf3['R_sum'][i:i+slice_len]) for i in range(0,200,slice_len)]
@@ -46,7 +46,7 @@ slice_len = 3
 # plt.plot(exp_cf2, label='exp2', color='orange')
 # plt.plot(baseline_cf2, label='0.75g')
 # plt.plot(baseline, label='baseline')
-# plt.plot(exp, label='exp', color='blue')
+plt.plot(exp, label='exp', color='blue')
 # plt.plot(exp_cf3, label='exp3', color='green')
 # plt.plot(baseline_cf2, label='exp4', color='red')
 # plt.plot(exp_g9, label='0.75g')

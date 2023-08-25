@@ -159,7 +159,40 @@ class ServerRequest():
                 break
 
         return paths
+
     
+    def evaluate(self, agent, max_path_length, iteration):
+        dummy_input = torch.randn(5, requires_grad=True)
+        models = []
+        agent.to(torch.device("cpu"))
+        torch.onnx.export(agent, dummy_input, "agent.onnx", verbose=True)
+        with open('agent.onnx','rb') as handle:
+            encode_byte = base64.b64encode(handle.read())
+        encode_string = encode_byte.decode("ascii")
+        models.append(encode_string)
+        json = {"numEnsemble": 1, "policy": models, "iteration": iteration, "epLength": max_path_length}
+        response = requests.post(self.server_url+'/request',json=json)
+        self.topic = response.text
+        print("topic", self.topic)
+        self.consumer.subscribe(self.topic)
+
+        r_avg = 0
+        count = 0
+        for message in self.consumer:
+            if message.value is None:
+                continue
+
+            reading = base64.b64decode(message.value)
+            json = pickle.loads(reading)
+            rewards = json['rewards']
+    
+            for r in rewards:
+                r_avg += (r / iteration)
+                count += 1
+                if count == iteration:
+                    return r_avg
+            
+            
     def training_data_upload(self, dict, epoch):
         # json = {"policyLoss": str(dict['Policy_loss']), "epoch": epoch, "criticLoss": str(dict['Critic_loss'])}
         # response = requests.post(self.server_url+'/train', json=json)

@@ -1,4 +1,6 @@
 import argparse
+from re import T
+from xmlrpc.client import Server
 import rlkit.torch.pytorch_util as ptu
 
 from rlkit.data_management.env_replay_buffer import EnsembleEnvReplayBuffer
@@ -14,12 +16,14 @@ from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 
 from examples.sunrise_async.mujoco_env.sphero_env import SpheroEnv
 from examples.sunrise_async.physical_sphero_env import PhysicalEnv
+from examples.sunrise_async.collection_request import ServerRequest
 
 import gym
 from examples.sunrise_async.client import Client
 import pickle
 import sys
-
+import numpy as np
+import torch
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -57,7 +61,7 @@ def get_env(env_name, seed):
     env = env(env_name=env_name, rand_seed=seed, misc_info={'reset_type': 'gym'})
     return env
 
-def experiment(variant):
+def experiment(variant, train):
     # expl_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
     # eval_env = NormalizedBoxEnv(get_env(variant['env'], variant['seed']))
     # obs_dim = expl_env.observation_space.low.size
@@ -170,7 +174,7 @@ def experiment(variant):
         log_dir=variant['log_dir'],
     )
     
-    replay_buffer_real.load_buffer(10)
+    # replay_buffer_real.load_buffer(10)
 
     trainer = NeurIPS20SACEnsembleTrainer(
         env= sphero_env,
@@ -200,18 +204,32 @@ def experiment(variant):
         **variant['algorithm_kwargs'],
         replay_buffer_real=replay_buffer_real ##
     )
+    if train:
     
-    algorithm.to(ptu.device)
-    # trainer.load_models(100)
-    algorithm.train()
-    # with open('stat_simreal_exp.pickle','wb') as handle:
-    #     pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
-    
-    trainer.save_models(20)
-    replay_buffer_real.save_buffer(20)
-    # pickle.dumps(L_policy[0])
-    # print("success")
+        algorithm.to(ptu.device)
+        trainer.load_models(100)
 
+        algorithm.train()
+        # with open('stat_simreal_exp.pickle','wb') as handle:
+        #     pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
+        
+        trainer.save_models(20)
+        replay_buffer_real.save_buffer(20)
+        # pickle.dumps(L_policy[0])
+        # print("success")
+
+    else:
+        trainer.load_models(0)
+        eval_policy = MakeDeterministic(trainer.policy[5])
+        # request = ServerRequest()
+        # r_avg = request.evaluate(trainer.policy[5], 100, 100)
+        # trainer.policy[5].to(torch.device("cpu"))
+        obs = torch.tensor([34.4564, 63.7864, 0.1235, 12.4756, 5.4786],device=ptu.device)
+        # obs = obs.reshape(1,-1)
+        # a, _, _, _, *_ = trainer.policy[5](obs, reparameterize=True, return_log_prob=True)
+        print(eval_policy.get_action(obs))
+        # print(a)
+        # print(r_avg)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -229,7 +247,7 @@ if __name__ == "__main__":
             num_expl_steps_per_train_loop=50,
             min_num_steps_before_training=100,
             max_path_length=10,
-            batch_size=16,
+            batch_size=256,
             save_frequency=5,
         ),
         trainer_kwargs=dict(
@@ -259,6 +277,6 @@ if __name__ == "__main__":
     variant['log_dir'] = log_dir
     ptu.set_gpu_mode(True, True)
     print(sys.version)
-    experiment(variant)
+    experiment(variant, train=False)
 
     
