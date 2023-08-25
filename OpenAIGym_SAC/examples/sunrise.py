@@ -219,18 +219,19 @@ def experiment(variant, train):
         # print("success")
 
     else:
-        trainer.load_models(999)
+        trainer.load_models(235)
         eval_policy = MakeDeterministic(trainer.policy[5])
-        # request = ServerRequest()
-        # r_avg = request.evaluate(trainer.policy[5], 100, 100)
+        request = ServerRequest()
         # trainer.policy[5].to(torch.device("cpu"))
-        obs = torch.tensor([12.4563, 5.4567, 0.1235, 34.7863, 63.4867],device=ptu.device)
+        # obs = torch.tensor([58.32794357, 52.96077419, 0.125, 80.64788346, 106.08366636], device=ptu.device)
+        obs = torch.tensor([80.64788346, 106.08366636, 0.1235, 58.32794357, 52.96077419], device=ptu.device)
         obs = obs.reshape(1,-1)
         with torch.no_grad():
             a, _, _, _, *_ = trainer.policy[5](obs, reparameterize=True, return_log_prob=True)
 
         # print(eval_policy.get_action(obs))
         print(a)
+        r_avg = request.evaluate(trainer.policy[5], 100, 100)
         # print(r_avg)
 
 if __name__ == "__main__":

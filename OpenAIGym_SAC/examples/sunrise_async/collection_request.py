@@ -164,7 +164,7 @@ class ServerRequest():
     def evaluate(self, agent, max_path_length, iteration):
         dummy_input = torch.randn(5, requires_grad=True)
         models = []
-        agent.to(torch.device("cpu"))
+        # agent.to(torch.device("cpu"))
         torch.onnx.export(agent, dummy_input, "agent.onnx", verbose=True)
         with open('agent.onnx','rb') as handle:
             encode_byte = base64.b64encode(handle.read())
