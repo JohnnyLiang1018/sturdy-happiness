@@ -219,16 +219,18 @@ def experiment(variant, train):
         # print("success")
 
     else:
-        trainer.load_models(0)
+        trainer.load_models(999)
         eval_policy = MakeDeterministic(trainer.policy[5])
         # request = ServerRequest()
         # r_avg = request.evaluate(trainer.policy[5], 100, 100)
         # trainer.policy[5].to(torch.device("cpu"))
-        obs = torch.tensor([34.4564, 63.7864, 0.1235, 12.4756, 5.4786],device=ptu.device)
-        # obs = obs.reshape(1,-1)
-        # a, _, _, _, *_ = trainer.policy[5](obs, reparameterize=True, return_log_prob=True)
-        print(eval_policy.get_action(obs))
-        # print(a)
+        obs = torch.tensor([12.4563, 5.4567, 0.1235, 34.7863, 63.4867],device=ptu.device)
+        obs = obs.reshape(1,-1)
+        with torch.no_grad():
+            a, _, _, _, *_ = trainer.policy[5](obs, reparameterize=True, return_log_prob=True)
+
+        # print(eval_policy.get_action(obs))
+        print(a)
         # print(r_avg)
 
 if __name__ == "__main__":
@@ -275,7 +277,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, True)
+    ptu.set_gpu_mode(False, True)
     print(sys.version)
     experiment(variant, train=False)
 
