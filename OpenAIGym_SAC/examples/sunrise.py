@@ -174,7 +174,7 @@ def experiment(variant, train):
         log_dir=variant['log_dir'],
     )
     
-    # replay_buffer_real.load_buffer(10)
+    replay_buffer_real.load_buffer(5)
 
     trainer = NeurIPS20SACEnsembleTrainer(
         env= sphero_env,
@@ -207,13 +207,13 @@ def experiment(variant, train):
     if train:
     
         algorithm.to(ptu.device)
-        trainer.load_models(100)
+        # trainer.load_models(100)
 
         algorithm.train()
         # with open('stat_simreal_exp.pickle','wb') as handle:
         #     pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
         
-        trainer.save_models(20)
+        # trainer.save_models(20)
         replay_buffer_real.save_buffer(20)
         # pickle.dumps(L_policy[0])
         # print("success")
@@ -280,6 +280,6 @@ if __name__ == "__main__":
     variant['log_dir'] = log_dir
     ptu.set_gpu_mode(False, True)
     print(sys.version)
-    experiment(variant, train=False)
+    experiment(variant, train=True)
 
     
