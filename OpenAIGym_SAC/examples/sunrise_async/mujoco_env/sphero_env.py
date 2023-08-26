@@ -62,10 +62,10 @@ class SpheroEnv(gym.Env):
 
 	def move_and_rotate(self, current_coords, action):
 		angle = (action + 1) * 180 
-		self.forward = angle - 180
+		self.forward = angle
 		rad = math.radians(angle)
 		x, y, z = current_coords
-		print(angle)
+		# print(angle)
 		x_prime = -math.cos(rad)
 		y_prime = -math.sin(rad)
 		z_prime = 0
@@ -335,13 +335,13 @@ class SpheroEnv(gym.Env):
 		start_time = self.data.time
 		while(self.data.time - start_time < 0.7):
 			mj.mj_step(self.model, self.data)
-		input("Wait for input")
+		# input("Wait for input")
 		
 		self.agent_x , self.agent_y, _ = self.data.xpos[2]
 		self.target_x, self.target_y, _ = self.data.xpos[3]
 		agent_x, agent_y, target_x, target_y = self.xy_normalize(self.agent_x, self.agent_y, self.target_x, self.target_y)
 		obs = np.array([agent_x, agent_y, self.forward, target_x, target_y],dtype=np.float32)
-		print(agent_x, agent_y)
+		# print(agent_x, agent_y)
 		# input("step completed")
 		reward = self.compute_reward() - prev_reward
 		# print("Obs", obs)
@@ -850,11 +850,12 @@ def render_it(env):
 # 	if i%50==0 and i!=0:
 # 		agent.save(f"kicha_{i}")
 
-env = SpheroEnv("placehold")
-env.reset()
-env.set_initial_position(-2.65, 4.62, 4.9597, 7.8014)
-env.render_it()
-# print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
-# print("Xpos", env.data.xpos[2], env.data.xpos[3])
-# obs, reward, done, _ = env.step([-0.1465])
-# print(obs, reward)
+if __name__ == "__main__":
+	env = SpheroEnv("placehold")
+	env.reset()
+	env.set_initial_position(0.25, 7.06, 4.95, 7.8014)
+	# env.render_it()
+	print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
+	# print("Xpos", env.data.xpos[2], env.data.xpos[3])
+	obs, reward, done, _ = env.step([0.74])
+	# print(obs, reward)

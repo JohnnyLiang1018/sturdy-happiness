@@ -132,4 +132,4 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             if self.save_frequency > 0:
                 if epoch % self.save_frequency == 0:
                     self.trainer.save_models(epoch)
-                    self.replay_buffer.save_buffer(epoch)
+                    # self.replay_buffer.save_buffer(epoch)
