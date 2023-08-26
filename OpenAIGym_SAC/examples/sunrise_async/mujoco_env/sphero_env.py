@@ -61,10 +61,11 @@ class SpheroEnv(gym.Env):
 		self.opt = mj.MjvOption()                        # visualization options
 
 	def move_and_rotate(self, current_coords, action):
-		angle = (action + 1) * 180
+		angle = (action + 1) * 180 
 		self.forward = angle - 180
 		rad = math.radians(angle)
 		x, y, z = current_coords
+		print(angle)
 		x_prime = -math.cos(rad)
 		y_prime = -math.sin(rad)
 		z_prime = 0
@@ -91,7 +92,7 @@ class SpheroEnv(gym.Env):
 
 
 	def render_it(self):
-		self.reset()
+		# self.reset()
 		# mj.mj_resetData(self.model, self.data)
 		# mj.mj_forward(self.model, self.data)
 		#start_agent_x=random.uniform(-45, 45)
@@ -217,16 +218,17 @@ class SpheroEnv(gym.Env):
 			# ball_vx, ball_vy= self.data.qvel[7:9]
 			# Select an action using the agent's policy
 			# TODO
-			action = self.agent.act(state)[0]
-			states.append(state) ##
-			actions.append(action) ##
-			angle, speed=action
+			# action = self.agent.act(state)[0]
+			# states.append(state) ##
+			# actions.append(action) ##
+			# angle, speed=action
 
 			
 			# direction= self.move_and_rotate(self.data.xpos[2], angle)
 			# direction = np.array(direction[:2])
 			# direction /= np.linalg.norm(direction)  # normalize the velocity vector
-			obs, reward, done, _ = self.step([random.uniform(-1,1), 0])
+			print(self.agent_x, self.agent_y)
+			obs, reward, done, _ = self.step([0.5, 0])
 			# print(direction)
 			# self.data.qvel[:2] = 5 * direction
 
@@ -265,8 +267,8 @@ class SpheroEnv(gym.Env):
 			next_state = obs
 			next_states.append(next_state) ##
 
-			self.agent.update_replay_buffer(state, action, reward, next_state, 0.0)
-			self.agent.train()
+			# self.agent.update_replay_buffer(state, action, reward, next_state, 0.0)
+			# self.agent.train()
 			score.append(reward)
 			state=next_state
 
@@ -333,12 +335,13 @@ class SpheroEnv(gym.Env):
 		start_time = self.data.time
 		while(self.data.time - start_time < 0.7):
 			mj.mj_step(self.model, self.data)
+		input("Wait for input")
 		
 		self.agent_x , self.agent_y, _ = self.data.xpos[2]
 		self.target_x, self.target_y, _ = self.data.xpos[3]
 		agent_x, agent_y, target_x, target_y = self.xy_normalize(self.agent_x, self.agent_y, self.target_x, self.target_y)
 		obs = np.array([agent_x, agent_y, self.forward, target_x, target_y],dtype=np.float32)
-		# print(agent_x, agent_y)
+		print(agent_x, agent_y)
 		# input("step completed")
 		reward = self.compute_reward() - prev_reward
 		# print("Obs", obs)
@@ -849,8 +852,9 @@ def render_it(env):
 
 env = SpheroEnv("placehold")
 env.reset()
-env.set_initial_position(0.4147, 2.95, -1.85, -2.354)
-print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
-print("Xpos", env.data.xpos[2], env.data.xpos[3])
-obs, reward, done, _ = env.step([-0.6639])
-print(obs, reward)
+env.set_initial_position(-2.65, 4.62, 4.9597, 7.8014)
+env.render_it()
+# print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
+# print("Xpos", env.data.xpos[2], env.data.xpos[3])
+# obs, reward, done, _ = env.step([-0.1465])
+# print(obs, reward)
