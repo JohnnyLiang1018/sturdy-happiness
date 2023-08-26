@@ -849,8 +849,8 @@ def render_it(env):
 
 env = SpheroEnv("placehold")
 env.reset()
-env.set_initial_position(-5.5943, 5.3157, 4.0357, -3.7475)
+env.set_initial_position(0.4147, 2.95, -1.85, -2.354)
 print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
 print("Xpos", env.data.xpos[2], env.data.xpos[3])
-obs, reward, done, _ = env.step([0.7714])
+obs, reward, done, _ = env.step([-0.6639])
 print(obs, reward)
