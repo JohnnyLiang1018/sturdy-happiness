@@ -169,7 +169,8 @@ def experiment(variant):
         log_dir=variant['log_dir'],
     )
 
-    replay_buffer_real.load_buffer(200)
+    replay_buffer_real.load_buffer(20)
+    replay_buffer_real.save_buffer(200)
     
     trainer = NeurIPS20SACEnsembleTrainer(
         env = sphero_env_sim,
@@ -253,7 +254,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, False)
+    ptu.set_gpu_mode(True, True)
     print(sys.version)
     experiment(variant)
 
