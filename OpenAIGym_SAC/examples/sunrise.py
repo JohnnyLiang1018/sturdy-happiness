@@ -169,8 +169,7 @@ def experiment(variant):
         log_dir=variant['log_dir'],
     )
 
-    replay_buffer_real.load_buffer(20)
-    replay_buffer_real.save_buffer(200)
+    # replay_buffer_real.load_buffer(200)
     
     trainer = NeurIPS20SACEnsembleTrainer(
         env = sphero_env_sim,
@@ -220,14 +219,14 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=100,
-            num_eval_steps_per_epoch=1000,
+            num_epochs=500,
+            num_eval_steps_per_epoch=10,
             num_trains_per_train_loop=200,
             num_expl_steps_per_train_loop=500,
-            min_num_steps_before_training=1000,
+            min_num_steps_before_training=2500,
             max_path_length=1000,
             batch_size=256,
-            save_frequency=1,
+            save_frequency=100,
         ),
         trainer_kwargs=dict(
             discount=0.99,
