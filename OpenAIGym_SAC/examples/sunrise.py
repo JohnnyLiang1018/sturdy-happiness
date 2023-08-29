@@ -174,7 +174,7 @@ def experiment(variant, train):
         log_dir=variant['log_dir'],
     )
     
-    replay_buffer_real.load_buffer(5)
+    # replay_buffer_real.load_buffer(5)
 
     trainer = NeurIPS20SACEnsembleTrainer(
         env= sphero_env,
@@ -219,7 +219,7 @@ def experiment(variant, train):
         # print("success")
 
     else:
-        trainer.load_models(235)
+        trainer.load_models(1000)
         eval_policy = MakeDeterministic(trainer.policy[5])
         request = ServerRequest()
         # trainer.policy[5].to(torch.device("cpu"))
@@ -231,8 +231,8 @@ def experiment(variant, train):
 
         # print(eval_policy.get_action(obs))
         print(a)
-        r_avg = request.evaluate(trainer.policy[5], 100, 100)
-        # print(r_avg)
+        r_avg = request.evaluate(trainer.policy[5], 10, 100)
+        print(r_avg)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -280,6 +280,6 @@ if __name__ == "__main__":
     variant['log_dir'] = log_dir
     ptu.set_gpu_mode(False, True)
     print(sys.version)
-    experiment(variant, train=True)
+    experiment(variant, train=False)
 
     

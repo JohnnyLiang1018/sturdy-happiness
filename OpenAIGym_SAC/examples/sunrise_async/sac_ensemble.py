@@ -846,39 +846,52 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
     
     def save_models(self, step):
         for en_index in range(self.num_ensemble):
-            torch.save(
-                self.policy[en_index].state_dict(), '%s/%d_th_actor_%s.pt' % (self.model_dir, en_index, step)
-            )
-            torch.save(
-                self.qf1[en_index].state_dict(), '%s/%d_th_1st_critic_%s.pt' % (self.model_dir, en_index, step)
-            )
-            torch.save(
-                self.qf2[en_index].state_dict(), '%s/%d_th_2nd_critic_%s.pt' % (self.model_dir, en_index, step)
-            )
-            torch.save(
-                self.target_qf1[en_index].state_dict(), '%s/%d_th_1st_target_critic_%s.pt' % (self.model_dir, en_index, step)
-            )
-            torch.save(
-                self.target_qf2[en_index].state_dict(), '%s/%d_th_2nd_target_critic_%s.pt' % (self.model_dir, en_index, step)
-            )
+            # torch.save(
+            #     self.policy[en_index].state_dict(), '%s/%d_th_actor_%s.pt' % (self.model_dir, en_index, step)
+            # )
+            # torch.save(
+            #     self.qf1[en_index].state_dict(), '%s/%d_th_1st_critic_%s.pt' % (self.model_dir, en_index, step)
+            # )
+            # torch.save(
+            #     self.qf2[en_index].state_dict(), '%s/%d_th_2nd_critic_%s.pt' % (self.model_dir, en_index, step)
+            # )
+            # torch.save(
+            #     self.target_qf1[en_index].state_dict(), '%s/%d_th_1st_target_critic_%s.pt' % (self.model_dir, en_index, step)
+            # )
+            # torch.save(
+            #     self.target_qf2[en_index].state_dict(), '%s/%d_th_2nd_target_critic_%s.pt' % (self.model_dir, en_index, step)
+            # )
+            torch.save({
+                'policy': self.policy[en_index].state_dict(),
+                'qf1': self.qf1[en_index].state_dict(),
+                'qf2': self.qf2[en_index].state_dict(),
+                'target_qf1': self.target_qf1[en_index].state_dict(),
+                'target_qf2': self.target_qf2[en_index].state_dict()
+            }, '%s/%d_th_network_dict_%s.pt' % (self.model_dir, en_index, step))
             
     def load_models(self, step):
         for en_index in range(self.num_ensemble):
-            self.policy[en_index].load_state_dict(
-                torch.load('%s/%d_th_actor_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
-            )
-            self.qf1[en_index].load_state_dict(
-                torch.load('%s/%d_th_1st_critic_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
-            )
-            self.qf2[en_index].load_state_dict(
-                torch.load('%s/%d_th_2nd_critic_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
-            )
-            self.target_qf1[en_index].load_state_dict(
-                torch.load('%s/%d_th_1st_target_critic_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
-            )
-            self.target_qf2[en_index].load_state_dict(
-                torch.load('%s/%d_th_2nd_target_critic_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
-            )
+            # self.policy[en_index].load_state_dict(
+            #     torch.load('%s/%d_th_actor_%s.pt' % (self.model_dir, en_index, step))
+            # )
+            # self.qf1[en_index].load_state_dict(
+            #     torch.load('%s/%d_th_1st_critic_%s.pt' % (self.model_dir, en_index, step))
+            # )
+            # self.qf2[en_index].load_state_dict(
+            #     torch.load('%s/%d_th_2nd_critic_%s.pt' % (self.model_dir, en_index, step))
+            # )
+            # self.target_qf1[en_index].load_state_dict(
+            #     torch.load('%s/%d_th_1st_target_critic_%s.pt' % (self.model_dir, en_index, step))
+            # )
+            # self.target_qf2[en_index].load_state_dict(
+            #     torch.load('%s/%d_th_2nd_target_critic_%s.pt' % (self.model_dir, en_index, step))
+            # )
+            checkpoint = torch.load('%s/%d_th_network_dict_%s.pt' % (self.model_dir, en_index, step), map_location=ptu.device)
+            self.policy[en_index].load_state_dict(checkpoint['policy'])
+            self.qf1[en_index].load_state_dict(checkpoint['qf1'])
+            self.qf2[en_index].load_state_dict(checkpoint['qf2'])
+            self.target_qf1[en_index].load_state_dict(checkpoint['target_qf1'])
+            self.target_qf2[en_index].load_state_dict(checkpoint['target_qf2'])
             
             
     def print_model(self):
