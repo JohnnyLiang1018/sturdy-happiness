@@ -690,7 +690,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             else:
                 if self.feedback_type == 1:
                     # print("std Q", np.mean(ptu.get_numpy(std_Q_critic_list[0])))
-                    weight_target_Q = torch.sigmoid(-std_Q_critic_list[0]*self.temperature) + 0.5  ##
+                    if old_appr:
+                        weight_target_Q = torch.sigmoid(-std_Q_critic_list[0]*self.temperature) + 0.5  ##
+                    else:
+                        weight_target_Q = torch.sigmoid(std_Q_critic_list[0]*self.temperature) + 0.5  ##
                     # print("weight Q", np.mean(ptu.get_numpy(weight_target_Q)))
                 else:
                     weight_target_Q = 2*torch.sigmoid(-std_Q_critic_list[0]*self.temperature)
