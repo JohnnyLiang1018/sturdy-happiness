@@ -3,7 +3,7 @@ import torch
 import pickle
 import numpy as np
 
-with open('stat_stable_experiment5.pickle', 'rb') as handle:
+with open('stat_stable_experiment8.pickle', 'rb') as handle:
     stat_exp = pickle.load(handle)
 
 with open('stat_exp5_cross_std.pickle', 'rb') as handle:
