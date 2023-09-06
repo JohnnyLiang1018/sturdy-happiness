@@ -33,6 +33,7 @@ def parse_args():
     
     # env
     parser.add_argument('--env', default="halfcheetah_poplin", type=str)
+    # parser.add_argument('--env', default="simonly_sphero", type=str)
     
     # ensemble
     parser.add_argument('--num_ensemble', default=3, type=int)

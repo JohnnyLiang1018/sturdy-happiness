@@ -123,7 +123,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                         # train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
                         tuning = False
                     # train_data = self.replay_buffer.random_batch(self.batch_size)
-                    self.trainer.train_exp(train_data_sim, train_data_sim_, train_data_real, tuning, old_appr=False)
+                    self.trainer.train_exp(train_data_sim, train_data_sim_, train_data_real, tuning, old_appr=True)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
             # count += 1
