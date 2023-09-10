@@ -210,8 +210,8 @@ def experiment(variant, train):
         # trainer.load_models(100)
 
         algorithm.train()
-        # with open('stat_simreal_exp.pickle','wb') as handle:
-        #     pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open('stat_simreal_exp.pickle','wb') as handle:
+            pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
         
         # trainer.save_models(20)
         replay_buffer_real.save_buffer(20)
@@ -219,19 +219,20 @@ def experiment(variant, train):
         # print("success")
 
     else:
-        trainer.load_models(300)
-        eval_policy = MakeDeterministic(trainer.policy[5])
+        trainer.load_models(400)
+        eval_policy = MakeDeterministic(trainer.policy[4])
         request = ServerRequest()
         # trainer.policy[5].to(torch.device("cpu"))
         # obs = torch.tensor([58.32794357, 52.96077419, 0.125, 80.64788346, 106.08366636], device=ptu.device)
         obs = torch.tensor([80.64788346, 106.08366636, 0.1235, 58.32794357, 52.96077419], device=ptu.device)
         obs = obs.reshape(1,-1)
         with torch.no_grad():
-            a, _, _, _, *_ = trainer.policy[5](obs, reparameterize=True, return_log_prob=True)
+            a, _, _, _, *_ = trainer.policy[4](obs, reparameterize=True, return_log_prob=True)
 
         # print(eval_policy.get_action(obs))
         print(a)
-        r_avg = request.evaluate(trainer.policy[5], 3, 100)
+        r_list, r_avg = request.evaluate(trainer.policy[4], 3, 100)
+        print(r_list)
         print(r_avg)
 
 if __name__ == "__main__":

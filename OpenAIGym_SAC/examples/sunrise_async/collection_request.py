@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.init as init
 import base64
 import rlkit.torch.pytorch_util as ptu
+import csv
 
 
 class SuperResolutionNet(nn.Module):
@@ -178,6 +179,7 @@ class ServerRequest():
 
         r_avg = 0
         count = 0
+        r_list = []
         for message in self.consumer:
             if message.value is None:
                 continue
@@ -189,8 +191,12 @@ class ServerRequest():
             for r in rewards:
                 r_avg += (r / iteration)
                 count += 1
+                r_list.append(r[0])
                 if count == iteration:
-                    return r_avg
+                    with open('simreal_neg.csv', mode='a', newline='') as handle:
+                        writer = csv.writer(handle)
+                        writer.writerow(r_list)
+                    return r_list, r_avg
             
             
     def training_data_upload(self, dict, epoch):
