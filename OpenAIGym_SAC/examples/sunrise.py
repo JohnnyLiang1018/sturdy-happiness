@@ -231,7 +231,7 @@ def experiment(variant, train):
 
         # print(eval_policy.get_action(obs))
         print(a)
-        r_list, r_avg = request.evaluate(trainer.policy[4], 3, 100)
+        r_list, r_avg = request.evaluate(trainer.policy[5], 3, 100)
         print(r_list)
         print(r_avg)
 
