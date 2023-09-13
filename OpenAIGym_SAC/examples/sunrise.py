@@ -219,7 +219,7 @@ def experiment(variant, train):
         # print("success")
 
     else:
-        trainer.load_models(400)
+        trainer.load_models(300)
         eval_policy = MakeDeterministic(trainer.policy[4])
         request = ServerRequest()
         # trainer.policy[5].to(torch.device("cpu"))

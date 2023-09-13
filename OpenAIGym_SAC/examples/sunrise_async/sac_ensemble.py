@@ -67,7 +67,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.temperature = temperature
         self.temperature_act = temperature_act
         self.expl_gamma = expl_gamma
-        self.model_dir = log_dir + '/model/simreal_exp_neg_model3'
+        self.model_dir = log_dir + '/model/simreal_exp2_pos_model'
         self.num_sim = num_sim ##
         self.num_real = num_real ##
         
