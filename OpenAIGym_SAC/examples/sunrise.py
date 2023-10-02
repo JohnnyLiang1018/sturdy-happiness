@@ -174,7 +174,7 @@ def experiment(variant, train):
         log_dir=variant['log_dir'],
     )
     
-    # replay_buffer_real.load_buffer(5)
+    replay_buffer_real.load_buffer(45)
 
     trainer = NeurIPS20SACEnsembleTrainer(
         env= sphero_env,
@@ -210,16 +210,16 @@ def experiment(variant, train):
         # trainer.load_models(100)
 
         algorithm.train()
-        with open('stat_simreal_exp.pickle','wb') as handle:
-            pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open('stat_simreal_exp.pickle','wb') as handle:
+        #     pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
         
         # trainer.save_models(20)
-        replay_buffer_real.save_buffer(20)
+        replay_buffer_real.save_buffer(55)
         # pickle.dumps(L_policy[0])
         # print("success")
 
     else:
-        trainer.load_models(400)
+        trainer.load_models(300)
         eval_policy = MakeDeterministic(trainer.policy[4])
         request = ServerRequest()
         # trainer.policy[5].to(torch.device("cpu"))
@@ -231,7 +231,7 @@ def experiment(variant, train):
 
         # print(eval_policy.get_action(obs))
         print(a)
-        r_list, r_avg = request.evaluate(trainer.policy[5], 3, 100)
+        r_list, r_avg = request.evaluate(trainer.policy[5], 3, 20)
         print(r_list)
         print(r_avg)
 
@@ -245,7 +245,7 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=20,
+            num_epochs=5,
             num_eval_steps_per_epoch=10,
             num_trains_per_train_loop=100,
             num_expl_steps_per_train_loop=50,
