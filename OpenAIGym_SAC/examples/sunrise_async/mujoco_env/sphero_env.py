@@ -331,6 +331,7 @@ class SpheroEnv(gym.Env):
 		# print(self.agent_x, self.agent_y)
 		self.data.qvel[:2] = 5 * direction
 		start_time = self.data.time
+		# while(self.data.time - start_time < 1/200):
 		while(self.data.time - start_time < 0.7):
 			mj.mj_step(self.model, self.data)
 		
