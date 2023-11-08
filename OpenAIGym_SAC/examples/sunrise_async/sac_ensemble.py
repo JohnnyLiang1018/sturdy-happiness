@@ -271,17 +271,23 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
 
             for en_index in range(len(Q_sim)):
-                var_Q_sim = (Q_sim[en_index].detach() - mean_Q_sim)
-                var_Q_real = (Q_real[en_index].detach() - mean_Q_real)
+                # var_Q_sim = (Q_sim[en_index].detach() - mean_Q_sim)**2
+                # var_Q_real = (Q_real[en_index].detach() - mean_Q_real)**2
                 if en_index == 0:
                     ## var_Q = (target_Q.detach() - mean_Q)**2
-                    var_Q = abs(var_Q_sim * var_Q_real)
-
+                    ## var_Q = abs(var_Q_sim * var_Q_real)
+                    var_Q_sim = (Q_sim[en_index].detach() - mean_Q_sim)**2
+                    var_Q_real = (Q_real[en_index].detach() - mean_Q_real)**2
                 else:
                     ## var_Q += (target_Q.detach() - mean_Q)**2
-                    var_Q += abs(var_Q_sim * var_Q_real)
+                    ## var_Q += abs(var_Q_sim * var_Q_real)
+                    var_Q_sim += (Q_sim[en_index].detach() - mean_Q_sim)**2
+                    var_Q_real += (Q_real[en_index].detach() - mean_Q_real)**2
             
-            var_Q = var_Q / len(Q_sim)
+            # var_Q = var_Q / len(Q_sim)
+            var_Q_sim = var_Q_sim / len(Q_sim)
+            var_Q_real = var_Q_real / len(Q_real)
+            var_Q = var_Q_sim / var_Q_real
             # print("var Q", np.mean(ptu.get_numpy(var_Q)))
             std_Q_list.append(torch.sqrt(var_Q).detach())
                 # std_Q_list[-1] = torch.tensor(1.0) ##
@@ -532,7 +538,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             rewards_real = torch.cat((batch_sim_['rewards'],batch_real['rewards']))
             terminals_sim = torch.cat((batch_sim_['terminals'], batch_sim['terminals']))
             terminals_real = torch.cat((batch_sim_['terminals'], batch_real['terminals']))
-            obs_sim = torch.cat((batch_sim_['observations'], batch_sim['observations']))
+            obs_sim  = torch.cat((batch_sim_['observations'], batch_sim['observations']))
             obs_real = torch.cat((batch_sim_['observations'], batch_real['observations']))
             actions_sim = torch.cat((batch_sim_['actions'], batch_sim['actions']))
             actions_real = torch.cat((batch_sim_['actions'], batch_real['actions']))
@@ -541,14 +547,25 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             mask_sim = torch.cat((batch_sim_['masks'], batch_sim['masks']))
             mask_real = torch.cat((batch_sim_['masks'], batch_real['masks']))
 
+            # rewards_sim = batch_sim['rewards']
+            # rewards_real = batch_real['rewards']
+            # terminals_sim = batch_sim['terminals']
+            # terminals_real = batch_real['terminals']
+            # obs_sim = batch_sim['observations']
+            # obs_real = batch_real['observations']
+            # actions_sim = batch_sim['actions']
+            # actions_real = batch_real['actions']
+
+
+
             ## TODO 
             std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True)
             std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
 
 
             if old_appr == True:
-                std_Q_actor_list_real = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=False, all_ensemble=True)
-                std_Q_critic_list_real = self.corrective_feedback(obs=obs_sim, update_type=1, is_sim=False, all_ensemble=True)
+                std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0, is_sim=False, all_ensemble=True)
+                std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False, all_ensemble=True)
             else:
                 std_Q_actor_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['observations'], update_type=0, is_sim=False)
                 std_Q_critic_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['next_observations'], update_type=1, is_sim=False)

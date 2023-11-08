@@ -2,7 +2,9 @@ from statistics import mean
 import numpy as np
 import torch 
 from rlkit.torch import pytorch_util as ptu
-from examples.sunrise_async.collection_request import CollectionRequest
+from examples.sunrise_async.collection_request import ServerRequest
+
+client = ServerRequest()
 
 def multitask_rollout(
         env,
@@ -668,6 +670,7 @@ def ensemble_real_rollout(
         num_ensemble,
         num_step,
         max_path_length=np.inf,
+        ber_mean=0.5
 ):
 
     observations = []
@@ -676,13 +679,13 @@ def ensemble_real_rollout(
     terminals = []
     agent_infos = []
     env_infos = []
+    masks = []
     o = env.reset()
     for en_index in range(num_ensemble):
         agent[en_index].reset()
     next_o = None
     path_length = 0
-    client = CollectionRequest()
-    observations, actions = client.request(agent,env,1,1,10)
+    paths = client.training_request(agent, env, numEnsemble=1,max_path_length=max_path_length, iteration=num_step, ber_mean=ber_mean)
 
 
     # while path_length < max_path_length:
@@ -706,28 +709,8 @@ def ensemble_real_rollout(
     #         break
     #     o = next_o
 
-    actions = np.array(actions)
-    if len(actions.shape) == 1:
-        actions = np.expand_dims(actions, 1)
-    observations = np.array(observations)
-    if len(observations.shape) == 1:
-        observations = np.expand_dims(observations, 1)
-        next_o = np.array([next_o])
-    next_observations = np.vstack(
-        (
-            observations[1:, :],
-            np.expand_dims(next_o, 0)
-        )
-    )
-    return dict(
-        observations=observations,
-        actions=actions,
-        rewards=np.array(rewards).reshape(-1, 1),
-        next_observations=next_observations,
-        terminals=np.array(terminals).reshape(-1, 1),
-        agent_infos=agent_infos,
-        env_infos=env_infos,
-    )
+    return paths
+
 def ensemble_eval(
     env,
     agent,

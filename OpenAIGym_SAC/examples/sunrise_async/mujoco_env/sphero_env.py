@@ -44,6 +44,8 @@ class SpheroEnv(gym.Env):
 		self.agent_x = None
 		self.agent_y = None
 		self.forward = None
+		self.current_action = 0
+		self.action_list = [0.75,0.75]
 
 		# Target
 		self.target_x = None
@@ -208,7 +210,8 @@ class SpheroEnv(gym.Env):
 		rewards = []
 		done = []
 		next_states = []
-	
+
+		command_time = time.time() + 1
 		while not glfw.window_should_close(window):
 			a_pos, b_pos= self.data.xpos[2], self.data.xpos[3]
 			agent_x, agent_y, agent_z = a_pos
@@ -228,7 +231,22 @@ class SpheroEnv(gym.Env):
 			# direction = np.array(direction[:2])
 			# direction /= np.linalg.norm(direction)  # normalize the velocity vector
 			print(self.agent_x, self.agent_y)
-			obs, reward, done, _ = self.step([0.5, 0])
+			if time.time() > command_time:
+				action = float(input("Press to continue"))
+			# action = (np.random.random() - 0.5) * 2
+			# action = self.action_list[self.current_action % 2]
+			# self.current_action += 1
+				command_time = time.time() + 1
+				obs, reward, done, _ = self.step([action, 0])
+
+				next_state = obs
+				next_states.append(next_state) ##
+				score.append(reward)
+				state=next_state
+
+				if done == True:
+					print("Reach Target")
+					break
 			# print(direction)
 			# self.data.qvel[:2] = 5 * direction
 
@@ -264,17 +282,7 @@ class SpheroEnv(gym.Env):
 			# rewards.append(reward) ##
 			# next_state = np.array([agent_x, agent_y, agent_vx, agent_vy, forward, ball_x, ball_y, ball_vx, ball_vy])
 			# next_state = np.array([agent_x_, agent_y_, self.forward, target_x_, target_y_])
-			next_state = obs
-			next_states.append(next_state) ##
 
-			# self.agent.update_replay_buffer(state, action, reward, next_state, 0.0)
-			# self.agent.train()
-			score.append(reward)
-			state=next_state
-
-			if done == True:
-				print("Reach Target")
-				break
 
 			# print("Move x distance", agent_x_ - agent_x)
 			# print("Move y distance", agent_y_ - agent_y)
@@ -850,12 +858,12 @@ def render_it(env):
 # 	if i%50==0 and i!=0:
 # 		agent.save(f"kicha_{i}")
 
-if __name__ == "__main__":
-	env = SpheroEnv("placehold")
-	env.reset()
-	env.set_initial_position(0.25, 7.06, 4.95, 7.8014)
-	# env.render_it()
-	print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
-	# print("Xpos", env.data.xpos[2], env.data.xpos[3])
-	obs, reward, done, _ = env.step([0.74])
-	# print(obs, reward)
+# if __name__ == "__main__":
+# 	env = SpheroEnv("placehold")
+# 	env.reset()
+# 	env.set_initial_position(-6.923, -7.021, 0.1189, -0.387)
+# 	env.render_it()
+# 	print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
+# 	# print("Xpos", env.data.xpos[2], env.data.xpos[3])
+# 	obs, reward, done, _ = env.step([-1])
+# 	# print(obs, reward)

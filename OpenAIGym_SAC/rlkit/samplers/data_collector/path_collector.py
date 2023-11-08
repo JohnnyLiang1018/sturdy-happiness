@@ -163,7 +163,7 @@ class EnsembleMdpPathCollector(PathCollector):
         self.ber_mean = ber_mean
         self.critic1 = critic1
         self.critic2 = critic2
-        self.inference_type = inference_type
+        self.inference_type = 1
         self.feedback_type = feedback_type
         self._noise_flag = noise_flag
         self.use_static_real_replay = use_static_real_replay
@@ -209,17 +209,24 @@ class EnsembleMdpPathCollector(PathCollector):
                         ber_mean=self.ber_mean,
                     )
                     if self.use_static_real_replay != True:
-                        path_real = ensemble_ucb_rollout(
-                            self._env_real,
-                            self._policy[self.num_sim:], ##
-                            critic1=self.critic1[self.num_sim:], ##
-                            critic2=self.critic2[self.num_sim:], ##
-                            inference_type=self.inference_type,
-                            feedback_type=self.feedback_type,
-                            num_ensemble=self.num_ensemble, ##
-                            noise_flag=self._noise_flag,
-                            max_path_length=max_path_length_this_loop,
-                            ber_mean=self.ber_mean,
+                        # path_real = ensemble_ucb_rollout(
+                        #     self._env_real,
+                        #     self._policy[self.num_sim:], ##
+                        #     critic1=self.critic1[self.num_sim:], ##
+                        #     critic2=self.critic2[self.num_sim:], ##
+                        #     inference_type=self.inference_type,
+                        #     feedback_type=self.feedback_type,
+                        #     num_ensemble=self.num_ensemble, ##
+                        #     noise_flag=self._noise_flag,
+                        #     max_path_length=max_path_length_this_loop,
+                        #     ber_mean=self.ber_mean,
+                        # )
+                        path_real = ensemble_real_rollout(
+                            self._env,
+                            self._policy,
+                            self.num_ensemble,
+                            num_steps,
+                            max_path_length_this_loop
                         )
                     else:
                         path_real = None
@@ -265,7 +272,7 @@ class EnsembleMdpPathCollector(PathCollector):
                         num_steps_collected += path_len_2
                         paths_real.append(path_real)
 
-                elif self.inference_type == -1:
+                else:
                     path_real = ensemble_real_rollout(
                         self._env,
                         self._policy,
@@ -283,28 +290,28 @@ class EnsembleMdpPathCollector(PathCollector):
 
                     return path_sim, path_real
 
-                else:
-                    path = ensemble_rollout(
-                        self._env,
-                        self._policy,
-                        self.num_ensemble,
-                        noise_flag=self._noise_flag,
-                        max_path_length=max_path_length_this_loop,
-                        ber_mean=self.ber_mean,
-                    )
-                    path_len = len(path['actions'])
-                    if (
-                        path_len != max_path_length
-                        and not path['terminals'][-1]
-                        and discard_incomplete_paths
-                    ):
-                        break
-                    num_steps_collected += path_len
-                    paths.append(path)
-                    self._num_paths_total += len(paths)
-                    self._num_steps_total += num_steps_collected
-                    self._epoch_paths.extend(paths)
-                    return paths
+                # else:
+                #     path = ensemble_rollout(
+                #         self._env,
+                #         self._policy,
+                #         self.num_ensemble,
+                #         noise_flag=self._noise_flag,
+                #         max_path_length=max_path_length_this_loop,
+                #         ber_mean=self.ber_mean,
+                #     )
+                #     path_len = len(path['actions'])
+                #     if (
+                #         path_len != max_path_length
+                #         and not path['terminals'][-1]
+                #         and discard_incomplete_paths
+                #     ):
+                #         break
+                #     num_steps_collected += path_len
+                #     paths.append(path)
+                #     self._num_paths_total += len(paths)
+                #     self._num_steps_total += num_steps_collected
+                #     self._epoch_paths.extend(paths)
+                #     return paths
 
                     
         #     path_len = len(path['actions'])
