@@ -1,10 +1,11 @@
 from statistics import mean
 import numpy as np
+from rlkit.torch.sac.policies import MakeDeterministic
 import torch 
 from rlkit.torch import pytorch_util as ptu
 from examples.sunrise_async.collection_request import ServerRequest
 
-client = ServerRequest()
+client = None
 
 def multitask_rollout(
         env,
@@ -713,7 +714,7 @@ def ensemble_real_rollout(
 
 def ensemble_eval(
     env,
-    agent,
+    agents,
     num_ensemble,
     max_path_length=10000,
     render=False,
@@ -727,6 +728,7 @@ def ensemble_eval(
     #     agent[en_index].reset()
     next_o = None
     path_length = 0
+    agent = MakeDeterministic(agents[5])
     if render:
         env.render(**render_kwargs)
     while path_length < max_path_length:
@@ -739,14 +741,16 @@ def ensemble_eval(
         #         a += _a
         # a = a / num_ensemble
         # a, agent_info = agent[np.random.randint(0,num_ensemble)].get_action(o)
-        obs = ptu.from_numpy(o).float()
-        obs = obs.reshape(1,-1)
-        with torch.no_grad():
-            a, _, _, new_log_pi, *_ = agent[5](
-                obs, reparameterize=True, return_log_prob=True,
-            )
+
+        # obs = ptu.from_numpy(o).float()
+        # obs = obs.reshape(1,-1)
+        # with torch.no_grad():
+        #     a, _, _, new_log_pi, *_ = agent[5](
+        #         obs, reparameterize=True, return_log_prob=True,
+        #     )
         # a, agent_info = agent[5].get_action(o)
-        next_o, r, d, env_info = env.step(ptu.get_numpy(a))
+        a = agent.get_action(o)
+        next_o, r, d, env_info = env.step(a)
         r_sum += r
         path_length += 1
         if d:

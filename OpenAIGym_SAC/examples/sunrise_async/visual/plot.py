@@ -6,7 +6,7 @@ import numpy as np
 with open('stat_stable_experiment7.pickle', 'rb') as handle:
     stat_exp = pickle.load(handle)
 
-with open('stat_stable_old.pickle', 'rb') as handle:
+with open('stat_stable_old2.pickle', 'rb') as handle:
     stat_baseline = pickle.load(handle)
 
 with open('stat_stable_075g_2.pickle', 'rb') as handle:

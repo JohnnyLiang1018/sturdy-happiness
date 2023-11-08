@@ -827,6 +827,9 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             if self.use_automatic_entropy_tuning:
                 self.eval_statistics['Alpha'] = tot_alpha
                 self.eval_statistics['Alpha Loss'] = tot_alpha_loss
+
+            if r_sum > 10:
+                self.save_models(len(self.diagram_statistics['R_sum']))
                 
         self._n_train_steps_total += 1
 
