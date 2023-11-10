@@ -6,11 +6,11 @@ import pickle
 import numpy as np
 import csv
 
-with open('stat_stable_1.pickle', 'rb') as handle:
-    stat_exp = pickle.load(handle)
+# with open('stat_stable_1.pickle', 'rb') as handle:
+#     stat_exp = pickle.load(handle)
 
-with open('stat_baseline.pickle', 'rb') as handle:
-    stat_baseline = pickle.load(handle)
+# with open('stat_baseline.pickle', 'rb') as handle:
+#     stat_baseline = pickle.load(handle)
 
 # with open('stat_stable_onethird_4.pickle', 'rb') as handle:
 #     stat_baseline_cf2 = pickle.load(handle)
@@ -131,11 +131,11 @@ def plot_distribution():
 
     bins = np.linspace(-30, 30, 50)
 
-    plt.hist(rewards_neg[:300], bins, alpha=0.5, label='cross std')
-    plt.hist(rewards_baseline[:300], bins, alpha=0.5, label='baseline')
+    plt.hist(rewards_neg, bins, alpha=0.5, label='cross std')
+    # plt.hist(rewards_baseline, bins, alpha=0.5, label='baseline')
     plt.legend(loc='upper right')
     plt.show()
     # print(rewards)
 
-# plot_distribution()
-plot_reward()
+plot_distribution()
+# plot_reward()
