@@ -52,21 +52,21 @@ for i in range(len(exp)):
 
 # plt.plot(exp_cf2, label='0.75g')
 # plt.plot(baseline_cf2, label='0.75g')
-plt.plot(baseline, label='baseline')
+# plt.plot(baseline, label='baseline')
 plt.plot(exp, label='cross_std')
 # plt.plot(exp_cf3, label='0.75g')
 # plt.plot(exp_g9, label='0.75g')
 # plt.ylabel("Reward")
 
 # plt.xlim(0,500)
-plt.ylim(-30,30)
+# plt.ylim(-30,30)
 # plt.plot(stat_baseline['Weight'], label='baseline')
 # plt.plot(stat_exp['Weight'], label='exp')
 # plt.plot(stat_exp_cf2['Weight'], label='exp_config2')
 # plt.plot(stat_baseline_cf2['Weight'], label='baseline_config2')
-plt.ylabel("Average reward")
+# plt.ylabel("Average reward")
 
-plt.xlabel("Epoch")
+# plt.xlabel("Epoch")
 plt.legend()
 plt.show()
 
