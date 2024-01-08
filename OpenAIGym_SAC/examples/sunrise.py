@@ -223,8 +223,8 @@ if __name__ == "__main__":
             num_epochs=500,
             num_eval_steps_per_epoch=10,
             num_trains_per_train_loop=200,
-            num_expl_steps_per_train_loop=500,
-            min_num_steps_before_training=1000,
+            num_expl_steps_per_train_loop=100,
+            min_num_steps_before_training=100,
             max_path_length=1000,
             batch_size=256,
             save_frequency=100,
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, False)
+    ptu.set_gpu_mode(True, True)
     print(sys.version)
     experiment(variant)
 

@@ -68,7 +68,7 @@ class SpheroEnv(gym.Env):
 		rad = math.radians(angle)
 		x, y, z = current_coords
 		# print(angle)
-		x_prime = -math.cos(rad)
+		x_prime = math.cos(rad)
 		y_prime = -math.sin(rad)
 		z_prime = 0
 
@@ -858,12 +858,12 @@ def render_it(env):
 # 	if i%50==0 and i!=0:
 # 		agent.save(f"kicha_{i}")
 
-# if __name__ == "__main__":
-# 	env = SpheroEnv("placehold")
-# 	env.reset()
-# 	env.set_initial_position(-6.923, -7.021, 0.1189, -0.387)
-# 	env.render_it()
-# 	print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
-# 	# print("Xpos", env.data.xpos[2], env.data.xpos[3])
-# 	obs, reward, done, _ = env.step([-1])
-# 	# print(obs, reward)
+if __name__ == "__main__":
+	env = SpheroEnv("placehold")
+	env.reset()
+	env.set_initial_position(1, 0, -1, 0)
+	env.render_it()
+	# print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
+	# print("Xpos", env.data.xpos[2], env.data.xpos[3])
+	# obs, reward, done, _ = env.step([-1])
+	# print(obs, reward)

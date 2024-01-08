@@ -1,11 +1,12 @@
 from statistics import mean
+from xmlrpc.client import Server
 import numpy as np
 from rlkit.torch.sac.policies import MakeDeterministic
 import torch 
 from rlkit.torch import pytorch_util as ptu
 from examples.sunrise_async.collection_request import ServerRequest
 
-client = None
+client = ServerRequest()
 
 def multitask_rollout(
         env,

@@ -144,7 +144,7 @@ class EnsembleMdpPathCollector(PathCollector):
             critic2=None,
             inference_type=0.0,
             feedback_type=1,
-            use_static_real_replay=True
+            use_static_real_replay=False
     ):
         if render_kwargs is None:
             render_kwargs = {}
