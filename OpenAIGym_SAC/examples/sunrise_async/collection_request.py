@@ -120,8 +120,8 @@ class ServerRequest():
             masks = np.array(masks)
 
             size = json['size']
-            print("obs", json['states'])
-            print("next obs", json['next_obs'])
+            # print("obs", json['states'])
+            # print("next obs", json['next_obs'])
             self.plot_trajectory(np.vstack((obs,np.expand_dims(next_obs,0))))
             next_obs = np.vstack(
                 (

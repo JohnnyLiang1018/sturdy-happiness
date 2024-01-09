@@ -717,23 +717,54 @@ def ensemble_eval(
     env,
     agents,
     num_ensemble,
-    max_path_length=10000,
+    max_path_length=100,
     render=False,
     render_kwargs=None,
 ):
     if render_kwargs is None:
         render_kwargs = {}
     r_sum = 0
-    o = env.reset()
     # for en_index in range(num_ensemble):
     #     agent[en_index].reset()
     next_o = None
-    path_length = 0
-    agent = MakeDeterministic(agents[5])
-    if render:
-        env.render(**render_kwargs)
-    while path_length < max_path_length:
-        a = None
+
+    for i in range(num_ensemble / 2):
+        o = env.reset()
+        path_length = 0
+        agent = MakeDeterministic(agents[i])
+        while path_length < max_path_length:
+            a = agent.get_action(o)
+            next_o, r, d, env_info = env.step(a)
+            r_sum += r
+            path_length += 1
+            if d:
+                o = env.reset()
+                continue
+            o = next_o
+    r_avg_sim = r_sum / (path_length * (num_ensemble/2))
+    print("Sim agent average reward", r_avg_sim)
+
+    r_sum = 0
+    for i in range(num_ensemble/2, num_ensemble):
+        o = env.reset()
+        path_length = 0
+        agent = MakeDeterministic(agents[i])
+        while path_length < max_path_length:
+            a = agent.get_action(o)
+            next_o, r, d, env_info = env.step(a)
+            r_sum += r
+            path_length += 1
+            if d:
+                o = env.reset()
+                continue
+            o = next_o
+    r_avg_real = r_sum / (path_length * (num_ensemble/2))
+    print("Real agent average reward", r_avg_real)
+
+    return r_avg_real
+
+    # while path_length < max_path_length:
+    #     a = None
         # for en_index in range(num_ensemble):
         #     _a, agent_info = agent[en_index].get_action(o)
         #     if en_index == 0:
@@ -750,18 +781,18 @@ def ensemble_eval(
         #         obs, reparameterize=True, return_log_prob=True,
         #     )
         # a, agent_info = agent[5].get_action(o)
-        a = agent.get_action(o)
-        next_o, r, d, env_info = env.step(a)
-        r_sum += r
-        path_length += 1
-        if d:
-            o = env.reset()
-            continue
-        o = next_o
-        if render:
-            env.render(**render_kwargs)
-    print("avg reward", r_sum/path_length)
-    return r_sum/path_length
+    #     a = agent.get_action(o)
+    #     next_o, r, d, env_info = env.step(a)
+    #     r_sum += r
+    #     path_length += 1
+    #     if d:
+    #         o = env.reset()
+    #         continue
+    #     o = next_o
+    #     if render:
+    #         env.render(**render_kwargs)
+    # print("avg reward", r_sum/path_length)
+    # return r_sum/path_length
 
 
 def ensemble_eval_rollout(
