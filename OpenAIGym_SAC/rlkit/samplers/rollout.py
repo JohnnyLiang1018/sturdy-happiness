@@ -728,7 +728,7 @@ def ensemble_eval(
     #     agent[en_index].reset()
     next_o = None
 
-    for i in range(num_ensemble / 2):
+    for i in range(int(num_ensemble / 2)):
         o = env.reset()
         path_length = 0
         agent = MakeDeterministic(agents[i])
@@ -741,11 +741,11 @@ def ensemble_eval(
                 o = env.reset()
                 continue
             o = next_o
-    r_avg_sim = r_sum / (path_length * (num_ensemble/2))
+    r_avg_sim = r_sum / (path_length * num_ensemble/2)
     print("Sim agent average reward", r_avg_sim)
 
     r_sum = 0
-    for i in range(num_ensemble/2, num_ensemble):
+    for i in range(int(num_ensemble/2), num_ensemble):
         o = env.reset()
         path_length = 0
         agent = MakeDeterministic(agents[i])

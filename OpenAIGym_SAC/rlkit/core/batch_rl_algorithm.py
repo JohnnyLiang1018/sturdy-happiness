@@ -82,9 +82,10 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 self.max_path_length,
                 self.num_eval_steps_per_epoch,
                 discard_incomplete_paths=True,
+                collect_real_paths=False,
             )
-            print("end eval collector")
-            gt.stamp('evaluation sampling')
+            # print("end eval collector")
+            # gt.stamp('evaluation sampling')
             
 
             for _ in range(self.num_train_loops_per_epoch):

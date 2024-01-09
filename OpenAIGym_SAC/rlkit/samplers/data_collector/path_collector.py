@@ -176,6 +176,7 @@ class EnsembleMdpPathCollector(PathCollector):
             max_path_length,
             num_steps,
             discard_incomplete_paths,
+            collect_real_paths=True,
     ):
         paths_sim = [] ##
         paths_real = [] ##
@@ -276,14 +277,16 @@ class EnsembleMdpPathCollector(PathCollector):
                 #     self._epoch_paths.extend(paths)
                 #     return paths
 
-        real_max_path_length = min(int(num_steps/10), 10)
-        paths_real = ensemble_real_rollout(
-                        self._env,
-                        self._policy,
-                        self.num_ensemble,
-                        int(num_steps/10),
-                        real_max_path_length
-                    )
+
+        if collect_real_paths == True:
+            real_max_path_length = min(int(num_steps/10), 10)
+            paths_real = ensemble_real_rollout(
+                            self._env,
+                            self._policy,
+                            self.num_ensemble,
+                            int(num_steps/10),
+                            real_max_path_length
+                        )
 
         #     path_len = len(path['actions'])
         #     if (
