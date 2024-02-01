@@ -126,6 +126,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.diagram_statistics.update({'Critic_loss': []}) ##
         self.diagram_statistics.update({'alpha_logpi': []}) ##
         self.diagram_statistics.update({'alpha': []}) ##
+        self.diagram_statistics.update({'R_eval': []}) ##
         self._n_train_steps_total = 0
         self._need_to_update_eval_statistics = True
 
@@ -497,7 +498,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 
         self._n_train_steps_total += 1
 
-    def train_from_torch_exp(self, batch_sim, batch_sim_, batch_real, tuning, old_appr):
+    def train_from_torch_exp(self, batch_sim, batch_sim_, batch_real, tuning, old_appr, num_epoch):
         # torch.autograd.set_detect_anomaly(True)
         # rewards = torch.cat((batch_sim['rewards'],batch_real['rewards']))
         # terminals = torch.cat((batch_sim['terminals'], batch_real['terminals']))
@@ -574,7 +575,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 
                 std_Q_actor_list_real = [torch.cat((std_Q_actor_list_sim_[0], std_Q_actor_list_real_[0]))]
                 std_Q_critic_list_real = [torch.cat((std_Q_critic_list_sim_[0], std_Q_critic_list_real_[0]))]
-
+ 
             # std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
             # std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)
 
@@ -792,8 +793,10 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             )))
             self.diagram_statistics['Weight'].append(np.mean(ptu.get_numpy(weight_target_Q))) ##
 
-            r_sum = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, max_path_length=100) ##
-            self.diagram_statistics['R_sum'].append(r_sum) ##
+            r_avg_sim, r_eval = ensemble_eval(self.eval_env, self.policy, self.num_ensemble, num_epoch, max_path_length=100) ##
+            self.diagram_statistics['R_sum'].append(r_avg_sim) ##
+            if r_eval is not None:
+                self.diagram_statistics['R_eval'].append(r_eval) ##
             self.diagram_statistics['Std_q'].append(np.mean(ptu.get_numpy(self.expl_gamma * std_Q))) ##
             self.diagram_statistics['Q_action'].append(np.mean(ptu.get_numpy(q_new_actions))) ##
             self.diagram_statistics['Log_pi'].append(np.mean(ptu.get_numpy(alpha*log_pi))) ##
@@ -828,7 +831,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 self.eval_statistics['Alpha'] = tot_alpha
                 self.eval_statistics['Alpha Loss'] = tot_alpha_loss
 
-            if r_sum > 10:
+            if r_eval is not None and r_eval > 10:
                 self.save_models(len(self.diagram_statistics['R_sum']))
                 
         self._n_train_steps_total += 1

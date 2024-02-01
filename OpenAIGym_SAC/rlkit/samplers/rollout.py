@@ -6,7 +6,7 @@ import torch
 from rlkit.torch import pytorch_util as ptu
 from examples.sunrise_async.collection_request import ServerRequest
 
-client = ServerRequest()
+# client = ServerRequest()
 
 def multitask_rollout(
         env,
@@ -669,6 +669,8 @@ def ensemble_ucb_rollout(
 def ensemble_real_rollout(
         env,
         agent,
+        critic1,
+        critic2,
         num_ensemble,
         num_step,
         max_path_length=np.inf,
@@ -683,11 +685,11 @@ def ensemble_real_rollout(
     env_infos = []
     masks = []
     o = env.reset()
-    for en_index in range(num_ensemble):
-        agent[en_index].reset()
+    # for en_index in range(num_ensemble):
+    #     agent[en_index].reset()
     next_o = None
     path_length = 0
-    paths = client.training_request(agent, env, numEnsemble=1,max_path_length=max_path_length, iteration=num_step, ber_mean=ber_mean)
+    paths = client.training_request(agent, critic1, critic2, env, num_ensemble, max_path_length=max_path_length, iteration=num_step, ber_mean=ber_mean)
 
 
     # while path_length < max_path_length:
@@ -717,6 +719,7 @@ def ensemble_eval(
     env,
     agents,
     num_ensemble,
+    num_epoch,
     max_path_length=100,
     render=False,
     render_kwargs=None,
@@ -744,24 +747,28 @@ def ensemble_eval(
     r_avg_sim = r_sum / (path_length * num_ensemble/2)
     print("Sim agent average reward", r_avg_sim)
 
-    r_sum = 0
-    for i in range(int(num_ensemble/2), num_ensemble):
-        o = env.reset()
-        path_length = 0
-        agent = MakeDeterministic(agents[i])
-        while path_length < max_path_length:
-            a = agent.get_action(o)
-            next_o, r, d, env_info = env.step(a)
-            r_sum += r
-            path_length += 1
-            if d:
-                o = env.reset()
-                continue
-            o = next_o
-    r_avg_real = r_sum / (path_length * (num_ensemble/2))
-    print("Real agent average reward", r_avg_real)
-
-    return r_avg_real
+    # r_sum = 0
+    # for i in range(int(num_ensemble/2), num_ensemble):
+    #     o = env.reset()
+    #     path_length = 0
+    #     agent = MakeDeterministic(agents[i])
+    #     while path_length < max_path_length:
+    #         a = agent.get_action(o)
+    #         next_o, r, d, env_info = env.step(a)
+    #         r_sum += r
+    #         path_length += 1
+    #         if d:
+    #             o = env.reset()
+    #             continue
+    #         o = next_o
+    # r_avg_real = r_sum / (path_length * (num_ensemble/2))
+    # print("Real agent average reward", r_avg_real)
+    eval_reward = None
+    # if num_epoch % 5 == 0:
+    # eval_reward = client.eval_request(agents[3:], int(num_ensemble/2), max_path_length=5, step_per_policy=10)
+    
+    return r_avg_sim, eval_reward
+    # return r_avg_sim
 
     # while path_length < max_path_length:
     #     a = None

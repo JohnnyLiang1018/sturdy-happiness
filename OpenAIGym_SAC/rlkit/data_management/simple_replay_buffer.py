@@ -167,6 +167,23 @@ class EnsembleSimpleReplayBuffer(EnsembleReplayBuffer):
             assert key not in batch.keys()
             batch[key] = self._env_infos[key][indices]
         return batch
+    
+    ##
+    def random_sub_batch(self, buffer_size, batch_size):
+        size = min(buffer_size, self._size)
+        indices = np.random.randint(0, size, batch_size)
+        batch = dict(
+            observations=self._observations[indices],
+            actions=self._actions[indices],
+            rewards=self._rewards[indices],
+            terminals=self._terminals[indices],
+            next_observations=self._next_obs[indices],
+            masks=self._mask[indices],
+        )
+        for key in self._env_info_keys:
+            assert key not in batch.keys()
+            batch[key] = self._env_infos[key][indices]
+        return batch
 
     def rebuild_env_info_dict(self, idx):
         return {

@@ -54,6 +54,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 self.max_path_length,
                 self.min_num_steps_before_training,
                 discard_incomplete_paths=False,
+                collect_real_paths=False,
             )
             # init_expl_paths = self.expl_data_collector.collect_new_paths(
             #     self.max_path_length,
@@ -66,6 +67,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             self.expl_data_collector.end_epoch(-1)
 
         count = 0 ##
+        epoch_num = 0
         for epoch in gt.timed_for(
                 range(self._start_epoch, self.num_epochs),
                 save_itrs=True,
@@ -93,6 +95,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                     self.max_path_length,
                     self.num_expl_steps_per_train_loop,
                     discard_incomplete_paths=False,
+                    collect_real_paths=False,
                 )
                 # new_expl_paths = self.expl_data_collector.collect_new_paths(
                 #     self.max_path_length,
@@ -118,17 +121,18 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                         tuning = True
                     else:
                         train_data_sim = self.replay_buffer.random_batch(round(self.batch_size/3))
-                        train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
+                        train_data_real = self.replay_buffer_real.random_sub_batch(epoch_num*10 + 200, round(self.batch_size/3))
                         train_data_sim_ = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
                         # train_data_sim = self.replay_buffer.random_batch(round(self.batch_size - self.batch_size/3))
                         # train_data_real = self.replay_buffer_real.random_batch(round(self.batch_size/3))
                         tuning = False
                     # train_data = self.replay_buffer.random_batch(self.batch_size)
-                    self.trainer.train_exp(train_data_sim, train_data_sim_, train_data_real, tuning, old_appr=False)
+                    self.trainer.train_exp(train_data_sim, train_data_sim_, train_data_real, tuning, epoch_num, old_appr=False)
                 gt.stamp('training', unique=False)
                 self.training_mode(False)
             # count += 1
 
+            epoch_num += 1
             self._end_epoch(epoch)
             if self.save_frequency > 0:
                 if epoch % self.save_frequency == 0:

@@ -230,7 +230,7 @@ class SpheroEnv(gym.Env):
 			# direction= self.move_and_rotate(self.data.xpos[2], angle)
 			# direction = np.array(direction[:2])
 			# direction /= np.linalg.norm(direction)  # normalize the velocity vector
-			print(self.agent_x, self.agent_y)
+			print(self.xy_normalize(self.agent_x, self.agent_y, self.target_x, self.target_y))
 			if time.time() > command_time:
 				action = float(input("Press to continue"))
 			# action = (np.random.random() - 0.5) * 2
@@ -403,9 +403,9 @@ class SpheroEnv(gym.Env):
 
 
 	def xy_normalize(self, agent_x, agent_y, target_x, target_y):
-		agent_x += 7.65
+		agent_x = 7.65 - agent_x
 		agent_y += 7.65
-		target_x += 7.65
+		target_x = 7.65 - target_x
 		target_y += 7.65
 		return agent_x*10, agent_y*10, target_x*10, target_y*10 
 
@@ -861,7 +861,7 @@ def render_it(env):
 if __name__ == "__main__":
 	env = SpheroEnv("placehold")
 	env.reset()
-	env.set_initial_position(1, 0, -1, 0)
+	env.set_initial_position(0, 0, -7, 0)
 	env.render_it()
 	# print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
 	# print("Xpos", env.data.xpos[2], env.data.xpos[3])

@@ -54,23 +54,70 @@ class ServerRequest():
 
         self.consumer = KafkaConsumer(
             bootstrap_servers=':9092',
+            enable_auto_commit=True,
             group_id = "robot"
         )
-    
-    def training_request(self, agents, env, numEnsemble, max_path_length, iteration, ber_mean):
+
+    def eval_request(self, agents, numEnsemble, max_path_length, step_per_policy):
         models = []
-        dummy_input = torch.randn(5, requires_grad=True)
-        print("dim", agents[0].input_size)
+        dummy_input_policy = torch.randn(5, requires_grad=True)
         for agent in agents:
             agent.to(torch.device("cpu"))
-            torch.onnx.export(agent, dummy_input, "agent.onnx")
+            torch.onnx.export(agent, dummy_input_policy, "agent.onnx")
+            with open('agent.onnx','rb') as handle:
+                encode_byte = base64.b64encode(handle.read())
+            encode_string = encode_byte.decode("ascii")
+            models.append(encode_string)
+            agent.to(ptu.device)
+
+        json = {"numEnsemble": numEnsemble, "policy": models, "iteration": step_per_policy, "epLength": max_path_length}
+        response = requests.post(self.server_url+'/eval',json=json)
+        self.topic = response.text
+        print("topic", self.topic)
+        self.consumer.subscribe("evalData14")
+        for message in self.consumer:
+            if message.value is None:
+                continue
+
+            reading = float(message.value.decode('utf-8'))
+            print("Avg reward in real environment: ", reading)
+            return reading
+    
+    def training_request(self, agents, critic1, critic2, env, numEnsemble, max_path_length, iteration, ber_mean):
+        models = []
+        critic1 = []
+        critic2 = []
+        dummy_input_policy = torch.randn(5, requires_grad=True)
+        dummy_input_critic = torch.randn(6, requires_grad=True)
+        for agent in agents:
+            agent.to(torch.device("cpu"))
+            torch.onnx.export(agent, dummy_input_policy, "agent.onnx")
             with open('agent.onnx','rb') as handle:
                 encode_byte = base64.b64encode(handle.read())
             encode_string = encode_byte.decode("ascii")
             models.append(encode_string)
             agent.to(ptu.device)
         
-        json = {"numEnsemble": numEnsemble, "policy": models, "iteration": iteration, "epLength": max_path_length}
+        for critic in critic1:
+            critic.to(torch.device("cpu"))
+            torch.onnx.export(critic, dummy_input_critic, "critic.onnx")
+            with open("critic.onnx", 'rb') as handle:
+                encode_byte = base64.b64encode(handle.read())
+            encode_string = encode_byte.decode("ascii")
+            critic1.append(encode_string)
+            agent.to(ptu.device)
+        
+        for critic in critic2:
+            critic.to(torch.device("cpu"))
+            torch.onnx.export(critic, dummy_input_critic, "critic.onnx")
+            with open("critic.onnx", 'rb') as handle:
+                encode_byte = base64.b64encode(handle.read())
+            encode_string = encode_byte.decode("ascii")
+            critic2.append(encode_string)
+            agent.to(ptu.device)
+        
+        
+        json = {"numEnsemble": numEnsemble, "policy": models, "critic1": critic1, "critic2": critic2, "iteration": iteration, "epLength": max_path_length}
         response = requests.post(self.server_url+'/request',json=json)
         self.topic = response.text
         print("topic", self.topic)

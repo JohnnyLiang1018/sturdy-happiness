@@ -144,7 +144,7 @@ class EnsembleMdpPathCollector(PathCollector):
             critic2=None,
             inference_type=0.0,
             feedback_type=1,
-            use_static_real_replay=False
+            use_static_real_replay=True
     ):
         if render_kwargs is None:
             render_kwargs = {}
@@ -282,8 +282,10 @@ class EnsembleMdpPathCollector(PathCollector):
             real_max_path_length = min(int(num_steps/10), 10)
             paths_real = ensemble_real_rollout(
                             self._env,
-                            self._policy,
-                            self.num_ensemble,
+                            self._policy[self.num_sim:self.num_real],
+                            self.critic1[self.num_sim:self.num_real],
+                            self.critic2[self.num_sim:self.num_real],
+                            self.num_real,
                             int(num_steps/10),
                             real_max_path_length
                         )
