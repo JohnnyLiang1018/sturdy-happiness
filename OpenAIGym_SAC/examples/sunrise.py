@@ -227,7 +227,7 @@ if __name__ == "__main__":
             min_num_steps_before_training=100,
             max_path_length=100,
             batch_size=256,
-            save_frequency=100,
+            save_frequency=5,
         ),
         trainer_kwargs=dict(
             discount=0.99,
