@@ -158,45 +158,39 @@ class ServerRequest():
             print(f"Get {int(size)} samples, {iteration - count} samples remaining")
             if count >= iteration:
                 break
+        self.consumer.close()
 
         return paths
 
     
-    def evaluate(self, agent, max_path_length, iteration):
+    def evaluate(self, agents, max_path_length, iteration, topic):
         dummy_input = torch.randn(5, requires_grad=True)
         models = []
         # agent.to(torch.device("cpu"))
-        torch.onnx.export(agent, dummy_input, "agent.onnx", verbose=True)
-        with open('agent.onnx','rb') as handle:
-            encode_byte = base64.b64encode(handle.read())
-        encode_string = encode_byte.decode("ascii")
-        models.append(encode_string)
-        json = {"numEnsemble": 1, "policy": models, "iteration": iteration, "epLength": max_path_length}
-        response = requests.post(self.server_url+'/request',json=json)
-        self.topic = response.text
+        for agent in agents:
+            torch.onnx.export(agent, dummy_input, "agent.onnx", verbose=True)
+            with open('agent.onnx','rb') as handle:
+                encode_byte = base64.b64encode(handle.read())
+            encode_string = encode_byte.decode("ascii")
+            models.append(encode_string)
+        json = {"numEnsemble": 1, "policy": models, "iteration": iteration, "epLength": max_path_length, "topic": topic}
+        response = requests.post(self.server_url+'/eval',json=json)
+        self.topic = topic
         print("topic", self.topic)
         self.consumer.subscribe(self.topic)
 
-        r_avg = 0
-        count = 0
         r_list = []
         for message in self.consumer:
             if message.value is None:
                 continue
 
-            reading = base64.b64decode(message.value)
-            json = pickle.loads(reading)
-            rewards = json['rewards']
-    
-            for r in rewards:
-                r_avg += (r / iteration)
-                count += 1
-                r_list.append(r[0])
-                if count == iteration:
-                    with open('simreal_neg.csv', mode='a', newline='') as handle:
-                        writer = csv.writer(handle)
-                        writer.writerow(r_list)
-                    return r_list, r_avg
+            reading = float(message.value.decode('utf-8'))
+            r_list.append(reading)
+            with open(f'{topic}.csv', mode='a', newline='') as handle:
+                writer = csv.writer(handle)
+                writer.writerow(r_list)
+            self.consumer.close()
+            return r_list, reading
             
             
     def training_data_upload(self, dict, epoch):

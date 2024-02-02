@@ -38,7 +38,7 @@ def parse_args():
     parser.add_argument('--seed', default=1, type=int)
     
     # env
-    parser.add_argument('--env', default="halfcheetah_poplin", type=str)
+    parser.add_argument('--env', default="sphero", type=str)
     
     # ensemble
     parser.add_argument('--num_ensemble', default=3, type=int)
@@ -174,7 +174,7 @@ def experiment(variant, train):
         log_dir=variant['log_dir'],
     )
     
-    replay_buffer_real.load_buffer(45)
+    # replay_buffer_real.load_buffer(45)
 
     trainer = NeurIPS20SACEnsembleTrainer(
         env= sphero_env,
@@ -219,19 +219,20 @@ def experiment(variant, train):
         # print("success")
 
     else:
-        trainer.load_models(300)
+        # trainer.model_dir = 'data/eval_models/exp_model'
+        trainer.load_models(1000)
         eval_policy = MakeDeterministic(trainer.policy[4])
         request = ServerRequest()
         # trainer.policy[5].to(torch.device("cpu"))
         # obs = torch.tensor([58.32794357, 52.96077419, 0.125, 80.64788346, 106.08366636], device=ptu.device)
         obs = torch.tensor([80.64788346, 106.08366636, 0.1235, 58.32794357, 52.96077419], device=ptu.device)
         obs = obs.reshape(1,-1)
-        with torch.no_grad():
-            a, _, _, _, *_ = trainer.policy[5](obs, reparameterize=True, return_log_prob=True)
+        # with torch.no_grad():
+        #     a, _, _, _, *_ = trainer.policy[5](obs, reparameterize=True, return_log_prob=True)
 
         # print(eval_policy.get_action(obs))
-        print(a)
-        r_list, r_avg = request.evaluate(trainer.policy[5], 3, 20)
+        # print(a)
+        r_list, r_avg = request.evaluate([trainer.policy[0], trainer.policy[1], trainer.policy[2]], 3, 20, 'simulated_only')
         print(r_list)
         print(r_avg)
 
@@ -275,7 +276,7 @@ if __name__ == "__main__":
     
                             
     set_seed(args.seed)
-    exp_name = 'SUNRISE'
+    exp_name = 'SUNRISE_exp'
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
