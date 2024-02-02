@@ -14,7 +14,6 @@ from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 from examples.sunrise_async.mujoco_env.sphero_env import SpheroEnv
 
 import gym
-from examples.sunrise_async.client import Client
 import pickle
 import sys
 
@@ -200,14 +199,21 @@ def experiment(variant):
         **variant['algorithm_kwargs'],
         replay_buffer_real=replay_buffer_real ##
     )
+    if variant['mode'] == 'train':
+        algorithm.to(ptu.device)
+        algorithm.train()
+        with open('stat_real_sample_increment.pickle','wb') as handle:
+            pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
+        trainer.save_models(1000)
+        # pickle.dumps(L_policy[0])
+        # print("success")
     
-    algorithm.to(ptu.device)
-    algorithm.train()
-    with open('stat_real_sample_increment.pickle','wb') as handle:
-        pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
-    trainer.save_models(1000)
-    # pickle.dumps(L_policy[0])
-    # print("success")
+    elif variant['mode'] == 'eval':
+        eval_dir = '../data/eval_models/exp_model'
+        trainer.model_dir = eval_dir
+        trainer.load_models(1000)
+
+
 
 
 if __name__ == "__main__":
@@ -246,6 +252,7 @@ if __name__ == "__main__":
         inference_type=1,
         temperature=20,
         log_dir="",
+        mode='eval',
     )
     
                             
