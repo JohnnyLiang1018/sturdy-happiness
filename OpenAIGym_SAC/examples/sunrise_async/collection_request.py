@@ -55,10 +55,11 @@ class ServerRequest():
 
         self.consumer = KafkaConsumer(
             bootstrap_servers=':9092',
-            group_id = "robot-test"
+            group_id = "robot-test",
+
         )
     
-    def training_request(self, agents, env, numEnsemble, max_path_length, iteration, ber_mean):
+    def training_request(self, agents, env, topic, numEnsemble, max_path_length, iteration, ber_mean):
         models = []
         dummy_input = torch.randn(5, requires_grad=True)
         print("dim", agents[0].input_size)
@@ -71,10 +72,11 @@ class ServerRequest():
             models.append(encode_string)
             agent.to(ptu.device)
         
-        json = {"numEnsemble": numEnsemble, "policy": models, "iteration": iteration, "epLength": max_path_length}
+        json = {"numEnsemble": numEnsemble, "policy": models, "iteration": iteration, "epLength": max_path_length, "topic": topic}
         response = requests.post(self.server_url+'/request',json=json)
-        self.topic = response.text
+        self.topic = topic
         print("topic", self.topic)
+        self.consumer.resume()
         self.consumer.subscribe(self.topic)
 
         # consumer = KafkaConsumer(
@@ -158,7 +160,7 @@ class ServerRequest():
             print(f"Get {int(size)} samples, {iteration - count} samples remaining")
             if count >= iteration:
                 break
-        self.consumer.close()
+        self.consumer.pause()
 
         return paths
 

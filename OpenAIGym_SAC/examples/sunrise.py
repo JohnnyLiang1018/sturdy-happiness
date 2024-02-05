@@ -89,6 +89,7 @@ def experiment(variant, train):
 
     # client = Client()
     client = None
+    topic = variant['data_collection_topic']
     
     for _ in range(NUM_ENSEMBLE*2):
     
@@ -138,6 +139,7 @@ def experiment(variant, train):
         sphero_env,  ##
         L_policy,
         NUM_ENSEMBLE,
+        topic,
         ber_mean=variant['ber_mean'],
         eval_flag=False,
         critic1=L_qf1,
@@ -152,6 +154,7 @@ def experiment(variant, train):
         sphero_env,  ##
         L_policy,
         NUM_ENSEMBLE,
+        topic,
         ber_mean=variant['ber_mean'],
         eval_flag=False,
         critic1=L_qf1,
@@ -174,7 +177,7 @@ def experiment(variant, train):
         log_dir=variant['log_dir'],
     )
     
-    # replay_buffer_real.load_buffer(45)
+    replay_buffer_real.load_buffer(15)
 
     trainer = NeurIPS20SACEnsembleTrainer(
         env= sphero_env,
@@ -214,7 +217,7 @@ def experiment(variant, train):
         #     pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
         
         # trainer.save_models(20)
-        replay_buffer_real.save_buffer(55)
+        replay_buffer_real.save_buffer(20)
         # pickle.dumps(L_policy[0])
         # print("success")
 
@@ -247,7 +250,7 @@ if __name__ == "__main__":
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
             num_epochs=5,
-            num_eval_steps_per_epoch=10,
+            num_eval_steps_per_epoch=0,
             num_trains_per_train_loop=100,
             num_expl_steps_per_train_loop=50,
             min_num_steps_before_training=100,
@@ -269,6 +272,7 @@ if __name__ == "__main__":
         seed=args.seed,
         ber_mean=args.ber_mean,
         env=args.env,
+        data_collection_topic="obstacle-train-data-test1",
         inference_type=1,
         temperature=20,
         log_dir="",
@@ -282,6 +286,6 @@ if __name__ == "__main__":
     variant['log_dir'] = log_dir
     ptu.set_gpu_mode(False, True)
     print(sys.version)
-    experiment(variant, train=False)
+    experiment(variant, train=True)
 
     

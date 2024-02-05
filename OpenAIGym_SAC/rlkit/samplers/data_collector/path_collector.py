@@ -134,6 +134,7 @@ class EnsembleMdpPathCollector(PathCollector):
             env_real,
             policy,
             num_ensemble,
+            topic,
             noise_flag=0,
             ber_mean=0.5,
             eval_flag=False,
@@ -158,6 +159,7 @@ class EnsembleMdpPathCollector(PathCollector):
         self.num_ensemble = num_ensemble
         self.num_sim = 3 ##
         self.num_real = 3 ##
+        self.topic = topic ##
         self.eval_flag = eval_flag
         self.ber_mean = ber_mean
         self.critic1 = critic1
@@ -262,7 +264,8 @@ class EnsembleMdpPathCollector(PathCollector):
                         self._policy,
                         self.num_ensemble,
                         num_steps,
-                        max_path_length_this_loop
+                        max_path_length_this_loop,
+                        self.topic,
                     )
 
                     path_sim = None

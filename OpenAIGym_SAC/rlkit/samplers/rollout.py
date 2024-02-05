@@ -671,6 +671,7 @@ def ensemble_real_rollout(
         num_ensemble,
         num_step,
         max_path_length,
+        topic,
         ber_mean=0.5,
 ):
 
@@ -686,7 +687,7 @@ def ensemble_real_rollout(
         agent[en_index].reset()
     next_o = None
     path_length = 0
-    paths = client.training_request(agent, env, numEnsemble=3,max_path_length=max_path_length, iteration=num_step, ber_mean=ber_mean)
+    paths = client.training_request(agent, env, topic, numEnsemble=3,max_path_length=max_path_length, iteration=num_step, ber_mean=ber_mean)
     # mask = torch.bernoulli(torch.Tensor([ber_mean]*num_ensemble)) ##
     # if mask.sum() == 0:
     #     rand_index = np.random.randint(num_ensemble, size=1)
