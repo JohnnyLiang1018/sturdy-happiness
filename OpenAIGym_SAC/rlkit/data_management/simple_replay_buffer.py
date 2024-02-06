@@ -198,7 +198,7 @@ class EnsembleSimpleReplayBuffer(EnsembleReplayBuffer):
             self._mask[:self._size],
             self._size,
         ]
-        torch.save(payload, path)
+        torch.save(payload, path, _use_new_zipfile_serialization=False)
 
     def load_buffer(self, epoch):
         path = self.buffer_dir + '/replay_%d.pt' % (epoch)
