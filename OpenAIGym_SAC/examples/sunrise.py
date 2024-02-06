@@ -169,7 +169,7 @@ def experiment(variant):
         log_dir=variant['log_dir'],
     )
 
-    replay_buffer_real.load_buffer(200)
+    replay_buffer_real.load_buffer(20)
     
     trainer = NeurIPS20SACEnsembleTrainer(
         env = sphero_env_sim,
@@ -199,19 +199,14 @@ def experiment(variant):
         **variant['algorithm_kwargs'],
         replay_buffer_real=replay_buffer_real ##
     )
-    if variant['mode'] == 'train':
-        algorithm.to(ptu.device)
-        algorithm.train()
-        with open('stat_real_sample_increment.pickle','wb') as handle:
-            pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
-        trainer.save_models(1000)
-        # pickle.dumps(L_policy[0])
-        # print("success")
-    
-    elif variant['mode'] == 'eval':
-        eval_dir = '../data/eval_models/exp_model'
-        trainer.model_dir = eval_dir
-        trainer.load_models(1000)
+
+    algorithm.to(ptu.device)
+    algorithm.train()
+    with open('stat_real_sample_increment.pickle','wb') as handle:
+        pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
+    trainer.save_models(1000)
+    # pickle.dumps(L_policy[0])
+    # print("success")
 
 
 
@@ -252,7 +247,6 @@ if __name__ == "__main__":
         inference_type=1,
         temperature=20,
         log_dir="",
-        mode='eval',
     )
     
                             
