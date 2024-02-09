@@ -861,7 +861,7 @@ def render_it(env):
 if __name__ == "__main__":
 	env = SpheroEnv("placehold")
 	env.reset()
-	env.set_initial_position(0, 0, -7, 0)
+	# env.set_initial_position(0, 0, -7, 0)
 	env.render_it()
 	# print("Qpos", env.data.qpos[:2], env.data.qpos[7:9])
 	# print("Xpos", env.data.xpos[2], env.data.xpos[3])

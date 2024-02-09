@@ -230,6 +230,19 @@ class EnsembleSimpleReplayBuffer(EnsembleReplayBuffer):
         self._next_obs[:self._size] = payload[4]
         self._mask[:self._size] = payload[5]
         self._top = self._size
+
+    def load_buffer_increment(self, epoch):
+        path = self.buffer_dir + '/replay_%d.pt' % (epoch)
+        payload = torch.load(path)
+        payload_size = payload[6]
+        self._observations[self._size: self._size + payload_size] = payload[0]
+        self._actions[self._size:self._size + payload_size] = payload[1][:,:1]
+        self._rewards[self._size:self._size + payload_size] = payload[2]
+        self._terminals[self._size:self._size + payload_size] = payload[3]
+        self._next_obs[self._size:self._size + payload_size] = payload[4]
+        self._mask[self._size:self._size + payload_size] = payload[5]
+        self._size = self._size + payload_size
+        self._top = self._size
         
 class RandomReplayBuffer(ReplayBuffer):
 
