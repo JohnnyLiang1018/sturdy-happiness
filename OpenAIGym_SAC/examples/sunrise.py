@@ -177,7 +177,7 @@ def experiment(variant, train):
         log_dir=variant['log_dir'],
     )
     
-    replay_buffer_real.load_buffer(15)
+    replay_buffer_real.load_buffer(20)
 
     trainer = NeurIPS20SACEnsembleTrainer(
         env= sphero_env,
@@ -217,13 +217,14 @@ def experiment(variant, train):
         #     pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
         
         # trainer.save_models(20)
-        replay_buffer_real.save_buffer(20)
+        replay_buffer_real.save_buffer(25)
         # pickle.dumps(L_policy[0])
         # print("success")
 
     else:
         # trainer.model_dir = 'data/eval_models/exp_model'
-        trainer.load_models(1000)
+        trainer.model_dir = variant['log_dir'] + '/obstacle_200ep_train_1/eval_models/exp_model'
+        trainer.load_models(130)
         eval_policy = MakeDeterministic(trainer.policy[4])
         request = ServerRequest()
         # trainer.policy[5].to(torch.device("cpu"))
@@ -235,7 +236,9 @@ def experiment(variant, train):
 
         # print(eval_policy.get_action(obs))
         # print(a)
-        r_list, r_avg = request.evaluate([trainer.policy[0], trainer.policy[1], trainer.policy[2]], 3, 20, 'simulated_only')
+        # topic:
+        # experiment, baseline, simulated_only, obstacle_exp, 
+        r_list, r_avg = request.evaluate([trainer.policy[3], trainer.policy[4], trainer.policy[5]], 5, 20, 'obstacle_exp')
         print(r_list)
         print(r_avg)
 
@@ -272,7 +275,7 @@ if __name__ == "__main__":
         seed=args.seed,
         ber_mean=args.ber_mean,
         env=args.env,
-        data_collection_topic="obstacle-train-data-test1",
+        data_collection_topic="obstacle-train-data-test5",
         inference_type=1,
         temperature=20,
         log_dir="",
@@ -286,6 +289,6 @@ if __name__ == "__main__":
     variant['log_dir'] = log_dir
     ptu.set_gpu_mode(False, True)
     print(sys.version)
-    experiment(variant, train=True)
+    experiment(variant, train=False)
 
     
