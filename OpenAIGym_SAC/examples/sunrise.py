@@ -229,12 +229,12 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=200,
+            num_epochs=100,
             num_eval_steps_per_epoch=10,
-            num_trains_per_train_loop=100,
+            num_trains_per_train_loop=1000,
             num_expl_steps_per_train_loop_sim=250,
-            num_expl_steps_per_train_loop_real=20,
-            min_num_steps_before_training=200,
+            num_expl_steps_per_train_loop_real=200,
+            min_num_steps_before_training=2000,
             max_path_length=100,
             batch_size=256,
             save_frequency=5,
@@ -256,8 +256,8 @@ if __name__ == "__main__":
         inference_type=1,
         temperature=20,
         log_dir="",
-        topic="FullLoopTest5",
-        start_from_checkpoint=5,
+        topic="FullLoopTraining",
+        start_from_checkpoint=0,
     )
     
                             

@@ -749,27 +749,27 @@ def ensemble_eval(
     r_avg_sim = r_sum / (path_length * num_ensemble/2)
     print("Sim agent average reward", r_avg_sim)
 
-    # r_sum = 0
-    # for i in range(int(num_ensemble/2), num_ensemble):
-    #     o = env.reset()
-    #     path_length = 0
-    #     agent = MakeDeterministic(agents[i])
-    #     while path_length < max_path_length:
-    #         a = agent.get_action(o)
-    #         next_o, r, d, env_info = env.step(a)
-    #         r_sum += r
-    #         path_length += 1
-    #         if d:
-    #             o = env.reset()
-    #             continue
-    #         o = next_o
-    # r_avg_real = r_sum / (path_length * (num_ensemble/2))
-    # print("Real agent average reward", r_avg_real)
+    r_sum = 0
+    for i in range(int(num_ensemble/2), num_ensemble):
+        o = env.reset()
+        path_length = 0
+        agent = MakeDeterministic(agents[i])
+        while path_length < max_path_length:
+            a = agent.get_action(o)
+            next_o, r, d, env_info = env.step(a)
+            r_sum += r
+            path_length += 1
+            if d:
+                o = env.reset()
+                continue
+            o = next_o
+    r_avg_real = r_sum / (path_length * (num_ensemble/2))
+    print("Real agent average reward", r_avg_real)
     eval_reward = None
     # if num_epoch % 5 == 0:
     # eval_reward = client.eval_request(agents[3:], int(num_ensemble/2), max_path_length=5, step_per_policy=10)
     
-    return r_avg_sim, eval_reward
+    return r_avg_sim, r_avg_real
     # return r_avg_sim
 
     # while path_length < max_path_length:
