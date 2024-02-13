@@ -6,7 +6,7 @@ import torch
 from rlkit.torch import pytorch_util as ptu
 from examples.sunrise_async.collection_request import ServerRequest
 
-# client = ServerRequest()
+client = ServerRequest()
 
 def multitask_rollout(
         env,
@@ -673,6 +673,8 @@ def ensemble_real_rollout(
         critic2,
         num_ensemble,
         num_step,
+        topic,
+        initial_collection_request,
         max_path_length=np.inf,
         ber_mean=0.5
 ):
@@ -689,7 +691,7 @@ def ensemble_real_rollout(
     #     agent[en_index].reset()
     next_o = None
     path_length = 0
-    paths = client.training_request(agent, critic1, critic2, env, num_ensemble, max_path_length=max_path_length, iteration=num_step, ber_mean=ber_mean)
+    paths = client.training_request(agent, critic1, critic2, env, num_ensemble, topic, initial_collection_request, max_path_length=max_path_length, iteration=num_step, ber_mean=ber_mean)
 
 
     # while path_length < max_path_length:

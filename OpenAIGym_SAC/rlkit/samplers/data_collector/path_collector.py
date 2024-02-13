@@ -134,6 +134,7 @@ class EnsembleMdpPathCollector(PathCollector):
             env_real,
             policy,
             num_ensemble,
+            topic, ##
             noise_flag=0,
             ber_mean=0.5,
             eval_flag=False,
@@ -159,6 +160,7 @@ class EnsembleMdpPathCollector(PathCollector):
         self.num_ensemble = num_ensemble
         self.num_sim = 3 ##
         self.num_real = 3 ##
+        self.topic = topic ##
         self.eval_flag = eval_flag
         self.ber_mean = ber_mean
         self.critic1 = critic1
@@ -174,19 +176,21 @@ class EnsembleMdpPathCollector(PathCollector):
     def collect_new_paths(
             self,
             max_path_length,
-            num_steps,
+            num_steps_sim,
+            num_steps_real,
             discard_incomplete_paths,
             collect_real_paths=True,
+            initial_collection_request=False,
     ):
         paths_sim = [] ##
         paths_real = [] ##
         paths = []
         num_steps_collected = 0
         print("collecting new path")
-        while num_steps_collected < num_steps:
+        while num_steps_collected < num_steps_sim:
             max_path_length_this_loop = min(  # Do not go over num_steps
                 max_path_length,
-                num_steps - num_steps_collected,
+                num_steps_sim - num_steps_collected,
             )
             if self.eval_flag:
                 path = ensemble_eval_rollout(
@@ -241,15 +245,16 @@ class EnsembleMdpPathCollector(PathCollector):
                         self._env,
                         self._policy,
                         self.num_ensemble,
-                        num_steps,
-                        max_path_length_this_loop
+                        num_steps_real,
+                        self.topic,
+                        max_path_length_this_loop,
                     )
 
                     path_sim = None
                     
                     self._num_paths_total += len(path_real)
                     self._num_paths_total += len(paths_real)
-                    self._num_steps_total += num_steps
+                    self._num_steps_total += num_steps_real
                     self._epoch_paths.extend(paths)
 
                     return path_sim, path_real
@@ -279,15 +284,17 @@ class EnsembleMdpPathCollector(PathCollector):
 
 
         if collect_real_paths == True:
-            real_max_path_length = min(int(num_steps/10), 10)
+            real_max_path_length = min(num_steps_real, 10)
             paths_real = ensemble_real_rollout(
                             self._env,
-                            self._policy[self.num_sim:self.num_real],
-                            self.critic1[self.num_sim:self.num_real],
-                            self.critic2[self.num_sim:self.num_real],
+                            self._policy[self.num_sim:],
+                            self.critic1[self.num_sim:],
+                            self.critic2[self.num_sim:],
                             self.num_real,
-                            int(num_steps/10),
-                            real_max_path_length
+                            num_steps_real,
+                            self.topic,
+                            initial_collection_request,
+                            real_max_path_length,
                         )
 
         #     path_len = len(path['actions'])

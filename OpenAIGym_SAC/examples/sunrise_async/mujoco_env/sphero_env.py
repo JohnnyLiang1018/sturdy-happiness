@@ -375,14 +375,7 @@ class SpheroEnv(gym.Env):
 
 		agent_x, agent_y, target_x, target_y = self.xy_normalize(self.agent_x, self.agent_y, self.target_x, self.target_y)
 		obs = np.array([agent_x, agent_y, 0, target_x, target_y], dtype=np.float32)
-		info = {}
 
-		score=[]
-		actions = []
-		states = []
-		rewards = []
-		done = []
-		next_states = []
 		return obs
 	
 	def render(self):

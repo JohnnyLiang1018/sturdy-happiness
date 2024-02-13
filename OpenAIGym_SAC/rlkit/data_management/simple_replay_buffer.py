@@ -206,7 +206,7 @@ class EnsembleSimpleReplayBuffer(EnsembleReplayBuffer):
         ])
     
     def save_buffer(self, epoch):
-        path = self.buffer_dir + '/replay_%d.pt' % (epoch)
+        path = self.buffer_dir + '/replay_%s.pt' % (epoch)
         payload = [
             self._observations[:self._size],
             self._actions[:self._size],
@@ -219,7 +219,7 @@ class EnsembleSimpleReplayBuffer(EnsembleReplayBuffer):
         torch.save(payload, path, _use_new_zipfile_serialization=False)
 
     def load_buffer(self, epoch):
-        path = self.buffer_dir + '/replay_%d.pt' % (epoch)
+        path = self.buffer_dir + '/replay_%s.pt' % (epoch)
         payload = torch.load(path)
         self._size = payload[6]
         self._observations[:self._size] = payload[0]
@@ -232,7 +232,7 @@ class EnsembleSimpleReplayBuffer(EnsembleReplayBuffer):
         self._top = self._size
 
     def load_buffer_increment(self, epoch):
-        path = self.buffer_dir + '/replay_%d.pt' % (epoch)
+        path = self.buffer_dir + '/replay_%s.pt' % (epoch)
         payload = torch.load(path)
         payload_size = payload[6]
         self._observations[self._size: self._size + payload_size] = payload[0]

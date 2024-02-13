@@ -133,6 +133,7 @@ def experiment(variant):
         sphero_env_real, ##
         L_policy,
         NUM_ENSEMBLE,
+        variant['topic'],
         ber_mean=variant['ber_mean'],
         eval_flag=False,
         critic1=L_qf1,
@@ -147,6 +148,7 @@ def experiment(variant):
         sphero_env_real,  ##
         L_policy,
         NUM_ENSEMBLE,
+        variant['topic'],
         ber_mean=variant['ber_mean'],
         eval_flag=False,
         critic1=L_qf1,
@@ -168,9 +170,6 @@ def experiment(variant):
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
-
-    replay_buffer_real.load_buffer(21)
-    replay_buffer_real.load_buffer_increment(20)
     
     trainer = NeurIPS20SACEnsembleTrainer(
         env = sphero_env_sim,
@@ -200,6 +199,14 @@ def experiment(variant):
         **variant['algorithm_kwargs'],
         replay_buffer_real=replay_buffer_real ##
     )
+    checkpoint = variant['start_from_checkpoint']
+    if checkpoint > 0:
+        trainer.load_models(checkpoint)
+        replay_buffer_sim.load_buffer(str(checkpoint)+'_sim')
+        replay_buffer_real.load_buffer(str(checkpoint)+'_real')
+    else:
+        replay_buffer_real.load_buffer('999')
+        replay_buffer_real.load_buffer_increment('1000')
 
     algorithm.to(ptu.device)
     algorithm.train()
@@ -224,9 +231,10 @@ if __name__ == "__main__":
         algorithm_kwargs=dict(
             num_epochs=200,
             num_eval_steps_per_epoch=10,
-            num_trains_per_train_loop=1000,
-            num_expl_steps_per_train_loop=250,
-            min_num_steps_before_training=2000,
+            num_trains_per_train_loop=100,
+            num_expl_steps_per_train_loop_sim=250,
+            num_expl_steps_per_train_loop_real=20,
+            min_num_steps_before_training=200,
             max_path_length=100,
             batch_size=256,
             save_frequency=5,
@@ -248,6 +256,8 @@ if __name__ == "__main__":
         inference_type=1,
         temperature=20,
         log_dir="",
+        topic="FullLoopTest5",
+        start_from_checkpoint=5,
     )
     
                             
@@ -256,7 +266,7 @@ if __name__ == "__main__":
     log_dir = setup_logger_custom(exp_name, variant=variant)
             
     variant['log_dir'] = log_dir
-    ptu.set_gpu_mode(True, False)
+    ptu.set_gpu_mode(True, True)
     print(sys.version)
     experiment(variant)
 

@@ -20,7 +20,8 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             max_path_length,
             num_epochs,
             num_eval_steps_per_epoch,
-            num_expl_steps_per_train_loop,
+            num_expl_steps_per_train_loop_sim,
+            num_expl_steps_per_train_loop_real,
             num_trains_per_train_loop,
             num_train_loops_per_epoch=1,
             min_num_steps_before_training=0,
@@ -41,7 +42,8 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
         self.num_eval_steps_per_epoch = num_eval_steps_per_epoch
         self.num_trains_per_train_loop = num_trains_per_train_loop
         self.num_train_loops_per_epoch = num_train_loops_per_epoch
-        self.num_expl_steps_per_train_loop = num_expl_steps_per_train_loop
+        self.num_expl_steps_per_train_loop_sim = num_expl_steps_per_train_loop_sim ##
+        self.num_expl_steps_per_train_loop_real = num_expl_steps_per_train_loop_real ##
         self.min_num_steps_before_training = min_num_steps_before_training
         self.save_frequency = save_frequency
         self.replay_buffer_real = replay_buffer_real ##
@@ -53,8 +55,10 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             init_expl_paths_sim, init_expl_paths_real = self.expl_data_collector.collect_new_paths(
                 self.max_path_length,
                 self.min_num_steps_before_training,
+                self.num_expl_steps_per_train_loop_real,
                 discard_incomplete_paths=False,
-                collect_real_paths=False,
+                collect_real_paths=True,
+                initial_collection_request=True,
             )
             # init_expl_paths = self.expl_data_collector.collect_new_paths(
             #     self.max_path_length,
@@ -83,6 +87,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             self.eval_data_collector.collect_new_paths(
                 self.max_path_length,
                 self.num_eval_steps_per_epoch,
+                num_steps_real=0,
                 discard_incomplete_paths=True,
                 collect_real_paths=False,
             )
@@ -93,9 +98,10 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             for _ in range(self.num_train_loops_per_epoch):
                 new_expl_paths_sim, new_expl_paths_real = self.expl_data_collector.collect_new_paths(
                     self.max_path_length,
-                    self.num_expl_steps_per_train_loop,
+                    self.num_expl_steps_per_train_loop_sim,
+                    self.num_expl_steps_per_train_loop_real,
                     discard_incomplete_paths=False,
-                    collect_real_paths=False,
+                    collect_real_paths=True,
                 )
                 # new_expl_paths = self.expl_data_collector.collect_new_paths(
                 #     self.max_path_length,
@@ -137,4 +143,5 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
             if self.save_frequency > 0:
                 if epoch % self.save_frequency == 0:
                     self.trainer.save_models(epoch)
-                    # self.replay_buffer.save_buffer(epoch)
+                    self.replay_buffer.save_buffer(str(epoch)+'_sim')
+                    self.replay_buffer_real.save_buffer(str(epoch)+'_real')

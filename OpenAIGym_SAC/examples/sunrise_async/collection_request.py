@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.init as init
 import base64
 import rlkit.torch.pytorch_util as ptu
+import csv
 
 
 class SuperResolutionNet(nn.Module):
@@ -58,7 +59,7 @@ class ServerRequest():
             group_id = "robot"
         )
 
-    def eval_request(self, agents, numEnsemble, max_path_length, step_per_policy):
+    def eval_request(self, agents, numEnsemble, max_path_length, step_per_policy, topic):
         models = []
         dummy_input_policy = torch.randn(5, requires_grad=True)
         for agent in agents:
@@ -75,20 +76,27 @@ class ServerRequest():
         self.topic = response.text
         print("topic", self.topic)
         self.consumer.subscribe("evalData14")
+
+        r_list = []
         for message in self.consumer:
             if message.value is None:
                 continue
 
             reading = float(message.value.decode('utf-8'))
+            r_list.append(reading)
+            with open(f'{topic}.csv', mode='a', newline='') as handle:
+                writer = csv.writer(handle)
+                writer.writerow(r_list)
             print("Avg reward in real environment: ", reading)
             return reading
     
-    def training_request(self, agents, critic1, critic2, env, numEnsemble, max_path_length, iteration, ber_mean):
+    def training_request(self, agents, critic1, critic2, env, numEnsemble, topic, initial_collection_request, max_path_length, iteration, ber_mean):
         models = []
-        critic1 = []
-        critic2 = []
+        critic1_list = []
+        critic2_list = []
         dummy_input_policy = torch.randn(5, requires_grad=True)
-        dummy_input_critic = torch.randn(6, requires_grad=True)
+        dummy_input_critic_obs = torch.randn((1,5), requires_grad=True)
+        dummy_input_critic_a = torch.randn((1,1), requires_grad=True)
         for agent in agents:
             agent.to(torch.device("cpu"))
             torch.onnx.export(agent, dummy_input_policy, "agent.onnx")
@@ -100,110 +108,105 @@ class ServerRequest():
         
         for critic in critic1:
             critic.to(torch.device("cpu"))
-            torch.onnx.export(critic, dummy_input_critic, "critic.onnx")
+            torch.onnx.export(critic, (dummy_input_critic_obs, dummy_input_critic_a), "critic.onnx")
             with open("critic.onnx", 'rb') as handle:
                 encode_byte = base64.b64encode(handle.read())
             encode_string = encode_byte.decode("ascii")
-            critic1.append(encode_string)
-            agent.to(ptu.device)
+            critic1_list.append(encode_string)
+            critic.to(ptu.device)
         
         for critic in critic2:
             critic.to(torch.device("cpu"))
-            torch.onnx.export(critic, dummy_input_critic, "critic.onnx")
+            torch.onnx.export(critic, (dummy_input_critic_obs, dummy_input_critic_a), "critic.onnx")
             with open("critic.onnx", 'rb') as handle:
                 encode_byte = base64.b64encode(handle.read())
             encode_string = encode_byte.decode("ascii")
-            critic2.append(encode_string)
-            agent.to(ptu.device)
+            critic2_list.append(encode_string)
+            critic.to(ptu.device)
         
-        
-        json = {"numEnsemble": numEnsemble, "policy": models, "critic1": critic1, "critic2": critic2, "iteration": iteration, "epLength": max_path_length}
+
+        paths = []
+        count = 0
+        if not initial_collection_request:
+            print(f"Waiting for {iteration} samples")
+            for message in self.consumer:
+                if message.value is None:
+                    continue
+            # while True:
+            #     records = consumer.poll(timeout_ms=1000)
+            #     for topic_data, consumer_records in records.items():
+            #         for consumer_record in consumer_records:
+            #             print("Received message: " + str(consumer_record.value.decode('utf-8')))
+                reading = base64.b64decode(message.value)
+                json = pickle.loads(reading)
+                masks = []
+                obs = json['states']
+                for i in range(len(obs)):
+                    mask = torch.bernoulli(torch.Tensor([ber_mean]*numEnsemble)) ##
+                    if mask.sum() == 0:
+                        rand_index = np.random.randint(numEnsemble, size=1)
+                        mask[rand_index] = 1
+                    mask = mask.numpy()
+                    masks.append(mask)
+
+                actions = json['actions']
+                next_obs = json['next_obs']
+                rewards = json['rewards']
+                terminals = json['dones']
+                env_info = json['env_info']
+                agent_info = json['agent_info']
+
+                if len(actions.shape) == 1:
+                    actions = np.expand_dims(actions, 1)
+                observations = np.array(obs)
+                if len(observations.shape) == 1:
+                    observations = np.expand_dims(observations, 1)
+                    next_obs = np.array([json['next_obs']])
+                masks = np.array(masks)
+
+                size = json['size']
+                # print("obs", json['states'])
+                # print("next obs", json['next_obs'])
+                self.plot_trajectory(np.vstack((obs,np.expand_dims(next_obs,0))))
+                next_obs = np.vstack(
+                    (
+                        obs[1:, :],
+                        np.expand_dims(next_obs, 0)
+                    )
+                )
+                # if (iteration - count) < size:
+                #     remaining = iteration-count
+                #     observations = observations[:remaining]
+                #     actions = actions[:remaining]
+                #     rewards = rewards[:remaining]
+                #     terminals = terminals[:remaining]
+                #     agent_info = agent_info[:remaining]
+                #     env_info = env_info[:remaining]
+
+                paths.append(dict(
+                    observations=observations,
+                    actions=actions,
+                    rewards=rewards.reshape(-1, 1),
+                    next_observations=next_obs,
+                    terminals=terminals.reshape(-1, 1),
+                    agent_infos=agent_info,
+                    env_infos=env_info,
+                    masks=masks,
+                ))
+                # print("state", states)
+                # print("actions", actions)
+                # print("received steps:" , size)
+
+                count += int(size)
+                print(f"Get {int(size)} samples, {iteration - count} samples remaining")
+                if count >= iteration:
+                    break
+
+        json = {"numEnsemble": numEnsemble, "policy": models, "critic1": critic1_list, "critic2": critic2_list, "iteration": iteration, "epLength": max_path_length, "topic": topic}
         response = requests.post(self.server_url+'/request',json=json)
         self.topic = response.text
         print("topic", self.topic)
         self.consumer.subscribe(self.topic)
-
-        # consumer = KafkaConsumer(
-        #     self.topic,
-        #     bootstrap_servers=':9092',
-        #     group_id = "robot"
-        # )
-
-        paths = []
-        count = 0
-        print(f"Waiting for {iteration} samples")
-        for message in self.consumer:
-            if message.value is None:
-                continue
-        # while True:
-        #     records = consumer.poll(timeout_ms=1000)
-        #     for topic_data, consumer_records in records.items():
-        #         for consumer_record in consumer_records:
-        #             print("Received message: " + str(consumer_record.value.decode('utf-8')))
-            reading = base64.b64decode(message.value)
-            json = pickle.loads(reading)
-            masks = []
-            obs = json['states']
-            for i in range(len(obs)):
-                mask = torch.bernoulli(torch.Tensor([ber_mean]*numEnsemble)) ##
-                if mask.sum() == 0:
-                    rand_index = np.random.randint(numEnsemble, size=1)
-                    mask[rand_index] = 1
-                mask = mask.numpy()
-                masks.append(mask)
-
-            actions = json['actions']
-            next_obs = json['next_obs']
-            rewards = json['rewards']
-            terminals = json['dones']
-            env_info = json['env_info']
-            agent_info = json['agent_info']
-
-            if len(actions.shape) == 1:
-                actions = np.expand_dims(actions, 1)
-            observations = np.array(obs)
-            if len(observations.shape) == 1:
-                observations = np.expand_dims(observations, 1)
-                next_obs = np.array([json['next_obs']])
-            masks = np.array(masks)
-
-            size = json['size']
-            # print("obs", json['states'])
-            # print("next obs", json['next_obs'])
-            self.plot_trajectory(np.vstack((obs,np.expand_dims(next_obs,0))))
-            next_obs = np.vstack(
-                (
-                    obs[1:, :],
-                    np.expand_dims(next_obs, 0)
-                )
-            )
-            # if (iteration - count) < size:
-            #     remaining = iteration-count
-            #     observations = observations[:remaining]
-            #     actions = actions[:remaining]
-            #     rewards = rewards[:remaining]
-            #     terminals = terminals[:remaining]
-            #     agent_info = agent_info[:remaining]
-            #     env_info = env_info[:remaining]
-
-            paths.append(dict(
-                observations=observations,
-                actions=actions,
-                rewards=rewards.reshape(-1, 1),
-                next_observations=next_obs,
-                terminals=terminals.reshape(-1, 1),
-                agent_infos=agent_info,
-                env_infos=env_info,
-                masks=masks,
-            ))
-            # print("state", states)
-            # print("actions", actions)
-            # print("received steps:" , size)
-
-            count += int(size)
-            print(f"Get {int(size)} samples, {iteration - count} samples remaining")
-            if count >= iteration:
-                break
 
         return paths
     
