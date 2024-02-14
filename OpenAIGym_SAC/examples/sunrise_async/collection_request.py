@@ -236,4 +236,4 @@ class ServerRequest():
         plt.ylim([-10,160])
         # plt.savefig(fname=f'trajectory_{self.num_trajectory}')
         self.num_trajectory += 1
-        plt.show(block=True)
+        plt.show(block=False)

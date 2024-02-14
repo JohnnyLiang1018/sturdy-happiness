@@ -232,9 +232,9 @@ if __name__ == "__main__":
             num_epochs=100,
             num_eval_steps_per_epoch=10,
             num_trains_per_train_loop=1000,
-            num_expl_steps_per_train_loop_sim=250,
+            num_expl_steps_per_train_loop_sim=200,
             num_expl_steps_per_train_loop_real=200,
-            min_num_steps_before_training=2000,
+            min_num_steps_before_training=3000,
             max_path_length=100,
             batch_size=256,
             save_frequency=5,
@@ -256,7 +256,7 @@ if __name__ == "__main__":
         inference_type=1,
         temperature=20,
         log_dir="",
-        topic="FullLoopTraining",
+        topic="FullLoopTraining2",
         start_from_checkpoint=0,
     )
     
