@@ -50,6 +50,7 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
         
     def _train(self):
         print("beginning of training")
+        initial_collection_request = True
         if self.min_num_steps_before_training > 0:
             print("collect initial path")
             init_expl_paths_sim, init_expl_paths_real = self.expl_data_collector.collect_new_paths(
@@ -58,8 +59,9 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                 self.num_expl_steps_per_train_loop_real,
                 discard_incomplete_paths=False,
                 collect_real_paths=True,
-                initial_collection_request=True,
+                initial_collection_request=initial_collection_request,
             )
+            initial_collection_request = False
             # init_expl_paths = self.expl_data_collector.collect_new_paths(
             #     self.max_path_length,
             #     self.min_num_steps_before_training,
@@ -102,7 +104,9 @@ class BatchRLAlgorithm(BaseRLAlgorithm, metaclass=abc.ABCMeta):
                     self.num_expl_steps_per_train_loop_real,
                     discard_incomplete_paths=False,
                     collect_real_paths=True,
+                    initial_collection_request = initial_collection_request,
                 )
+                initial_collection_request = False
                 # new_expl_paths = self.expl_data_collector.collect_new_paths(
                 #     self.max_path_length,
                 #     self.num_expl_steps_per_train_loop,

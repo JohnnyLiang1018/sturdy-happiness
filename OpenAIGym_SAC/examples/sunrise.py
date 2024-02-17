@@ -1,4 +1,5 @@
 import argparse
+from tabnanny import check
 import rlkit.torch.pytorch_util as ptu
 
 from rlkit.data_management.env_replay_buffer import EnsembleEnvReplayBuffer
@@ -209,7 +210,7 @@ def experiment(variant):
         replay_buffer_real.load_buffer_increment('1000')
 
     algorithm.to(ptu.device)
-    algorithm.train()
+    algorithm.train(start_epoch=checkpoint)
     with open('stat_real_sample_increment.pickle','wb') as handle:
         pickle.dump(trainer.get_diagram_diagnostics(), handle, protocol=pickle.HIGHEST_PROTOCOL)
     trainer.save_models(1000)
@@ -234,7 +235,7 @@ if __name__ == "__main__":
             num_trains_per_train_loop=1000,
             num_expl_steps_per_train_loop_sim=200,
             num_expl_steps_per_train_loop_real=200,
-            min_num_steps_before_training=3000,
+            min_num_steps_before_training=0,
             max_path_length=100,
             batch_size=256,
             save_frequency=5,
@@ -257,7 +258,7 @@ if __name__ == "__main__":
         temperature=20,
         log_dir="",
         topic="FullLoopTraining2",
-        start_from_checkpoint=0,
+        start_from_checkpoint=5,
     )
     
                             
