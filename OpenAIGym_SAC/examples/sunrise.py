@@ -171,9 +171,6 @@ def experiment(variant):
         NUM_ENSEMBLE,
         log_dir=variant['log_dir'],
     )
-
-    replay_buffer_real.load_buffer('first')
-    replay_buffer_real.save_buffer('first_')
     
     trainer = NeurIPS20SACEnsembleTrainer(
         env = sphero_env_sim,
