@@ -206,8 +206,10 @@ def experiment(variant):
         replay_buffer_sim.load_buffer(str(checkpoint)+'_sim')
         replay_buffer_real.load_buffer(str(checkpoint)+'_real')
     else:
-        replay_buffer_real.load_buffer('999')
-        replay_buffer_real.load_buffer_increment('1000')
+        replay_buffer_real.load_buffer('35')
+        replay_buffer_real.load_buffer_increment('21')
+        replay_buffer_real.load_buffer_increment('20')
+        # replay_buffer_real.load_buffer_increment('1000')
 
     algorithm.to(ptu.device)
     algorithm.train(start_epoch=checkpoint)
@@ -233,12 +235,12 @@ if __name__ == "__main__":
             num_epochs=100,
             num_eval_steps_per_epoch=10,
             num_trains_per_train_loop=1000,
-            num_expl_steps_per_train_loop_sim=200,
+            num_expl_steps_per_train_loop_sim=1000,
             num_expl_steps_per_train_loop_real=200,
-            min_num_steps_before_training=0,
+            min_num_steps_before_training=4000,
             max_path_length=100,
             batch_size=256,
-            save_frequency=5,
+            save_frequency=1,
         ),
         trainer_kwargs=dict(
             discount=0.99,
@@ -258,7 +260,7 @@ if __name__ == "__main__":
         temperature=20,
         log_dir="",
         topic="FullLoopTraining2",
-        start_from_checkpoint=5,
+        start_from_checkpoint=0,
     )
     
                             

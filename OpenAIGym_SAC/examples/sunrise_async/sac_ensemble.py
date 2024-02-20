@@ -498,7 +498,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 
         self._n_train_steps_total += 1
 
-    def train_from_torch_exp(self, batch_sim, batch_sim_, batch_real, tuning, old_appr, num_epoch):
+    def train_from_torch_exp(self, batch_sim, batch_real_, batch_real, tuning, old_appr, num_epoch):
         # torch.autograd.set_detect_anomaly(True)
         # rewards = torch.cat((batch_sim['rewards'],batch_real['rewards']))
         # terminals = torch.cat((batch_sim['terminals'], batch_real['terminals']))
@@ -535,18 +535,18 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
             std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
 
         else:
-            rewards_sim = torch.cat((batch_sim_['rewards'],batch_sim['rewards']))
-            rewards_real = torch.cat((batch_sim_['rewards'],batch_real['rewards']))
-            terminals_sim = torch.cat((batch_sim_['terminals'], batch_sim['terminals']))
-            terminals_real = torch.cat((batch_sim_['terminals'], batch_real['terminals']))
-            obs_sim  = torch.cat((batch_sim_['observations'], batch_sim['observations']))
-            obs_real = torch.cat((batch_sim_['observations'], batch_real['observations']))
-            actions_sim = torch.cat((batch_sim_['actions'], batch_sim['actions']))
-            actions_real = torch.cat((batch_sim_['actions'], batch_real['actions']))
-            next_obs_sim = torch.cat((batch_sim_['next_observations'], batch_sim['next_observations']))
-            next_obs_real = torch.cat((batch_sim_['next_observations'], batch_real['next_observations']))
-            mask_sim = torch.cat((batch_sim_['masks'], batch_sim['masks']))
-            mask_real = torch.cat((batch_sim_['masks'], batch_real['masks']))
+            rewards_sim = torch.cat((batch_real_['rewards'],batch_sim['rewards']))
+            rewards_real = torch.cat((batch_real_['rewards'],batch_real['rewards']))
+            terminals_sim = torch.cat((batch_real_['terminals'], batch_sim['terminals']))
+            terminals_real = torch.cat((batch_real_['terminals'], batch_real['terminals']))
+            obs_sim  = torch.cat((batch_real_['observations'], batch_sim['observations']))
+            obs_real = torch.cat((batch_real_['observations'], batch_real['observations']))
+            actions_sim = torch.cat((batch_real_['actions'], batch_sim['actions']))
+            actions_real = torch.cat((batch_real_['actions'], batch_real['actions']))
+            next_obs_sim = torch.cat((batch_real_['next_observations'], batch_sim['next_observations']))
+            next_obs_real = torch.cat((batch_real_['next_observations'], batch_real['next_observations']))
+            mask_sim = torch.cat((batch_real_['masks'], batch_sim['masks']))
+            mask_real = torch.cat((batch_real_['masks'], batch_real['masks']))
 
             # rewards_sim = batch_sim['rewards']
             # rewards_real = batch_real['rewards']
@@ -560,21 +560,21 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
 
             ## TODO 
-            std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True)
-            std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
+            std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0, is_sim=False)
+            std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
 
 
             if old_appr == True:
                 std_Q_actor_list_real = self.corrective_feedback(obs=obs_real, update_type=0, is_sim=False, all_ensemble=True)
                 std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False, all_ensemble=True)
             else:
-                std_Q_actor_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['observations'], update_type=0, is_sim=False)
-                std_Q_critic_list_sim_ = self.corrective_feedback_exp(obs=batch_sim_['next_observations'], update_type=1, is_sim=False)
-                std_Q_actor_list_real_ = self.corrective_feedback(obs=batch_real['observations'], update_type=0, is_sim=False)
-                std_Q_critic_list_real_ = self.corrective_feedback(obs=batch_real['next_observations'], update_type=1, is_sim=False)
+                std_Q_actor_list_sim_ = self.corrective_feedback(obs=batch_sim['observations'], update_type=0, is_sim=True, all_ensemble=True)
+                std_Q_critic_list_sim_ = self.corrective_feedback(obs=batch_sim['next_observations'], update_type=1, is_sim=True, all_ensemble=True)
+                std_Q_actor_list_real_ = self.corrective_feedback(obs=batch_real_['observations'], update_type=0, is_sim=False, all_ensemble=True)
+                std_Q_critic_list_real_ = self.corrective_feedback(obs=batch_real_['next_observations'], update_type=1, is_sim=False, all_ensemble=True)
                 
-                std_Q_actor_list_real = [torch.cat((std_Q_actor_list_sim_[0], std_Q_actor_list_real_[0]))]
-                std_Q_critic_list_real = [torch.cat((std_Q_critic_list_sim_[0], std_Q_critic_list_real_[0]))]
+                std_Q_actor_list_sim = [torch.cat((std_Q_actor_list_real_[0], -std_Q_actor_list_sim_[0]))]
+                std_Q_critic_list_sim = [torch.cat((std_Q_critic_list_real_[0], -std_Q_critic_list_sim_[0]))]
  
             # std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
             # std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)
@@ -711,7 +711,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     if old_appr:
                         weight_target_Q = torch.sigmoid(-std_Q_critic_list[0]*self.temperature) + 0.5  ##
                     else:
-                        weight_target_Q = torch.sigmoid(-std_Q_critic_list[0]*self.temperature) + 0.5  ##
+                        weight_target_Q = torch.sigmoid(std_Q_critic_list[0]*self.temperature) + 0.5  ##
                     # print("weight Q", np.mean(ptu.get_numpy(weight_target_Q)))
                 else:
                     weight_target_Q = 2*torch.sigmoid(-std_Q_critic_list[0]*self.temperature)
