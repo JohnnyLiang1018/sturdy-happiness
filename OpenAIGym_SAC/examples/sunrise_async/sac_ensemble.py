@@ -64,7 +64,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
         self.temperature = temperature
         self.temperature_act = temperature_act
         self.expl_gamma = expl_gamma
-        self.model_dir = log_dir + '/model'
+        self.model_dir = log_dir + '/test1'
         self.num_sim = num_sim ##
         self.num_real = num_real ##
         
@@ -560,8 +560,8 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
 
 
             ## TODO 
-            std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True)
-            std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True)
+            std_Q_actor_list_sim = self.corrective_feedback(obs=obs_sim, update_type=0, is_sim=True, all_ensemble=True)
+            std_Q_critic_list_sim = self.corrective_feedback(obs=next_obs_sim, update_type=1, is_sim=True, all_ensemble=True)
 
 
             if old_appr == True:
