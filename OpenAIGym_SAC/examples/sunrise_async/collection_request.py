@@ -167,7 +167,7 @@ class ServerRequest():
                 size = json['size']
                 # print("obs", json['states'])
                 # print("next obs", json['next_obs'])
-                self.plot_trajectory(np.vstack((obs,np.expand_dims(next_obs,0))))
+                # self.plot_trajectory(np.vstack((obs,np.expand_dims(next_obs,0))))
                 next_obs = np.vstack(
                     (
                         obs[1:, :],
@@ -236,4 +236,4 @@ class ServerRequest():
         plt.ylim([-10,160])
         # plt.savefig(fname=f'trajectory_{self.num_trajectory}')
         self.num_trajectory += 1
-        plt.show(block=False)
+        plt.show(block=True)

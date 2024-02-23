@@ -287,9 +287,9 @@ class EnsembleMdpPathCollector(PathCollector):
             real_max_path_length = min(num_steps_real, 10)
             paths_real = ensemble_real_rollout(
                             self._env,
-                            self._policy[self.num_sim:],
-                            self.critic1[self.num_sim:],
-                            self.critic2[self.num_sim:],
+                            self._policy[:self.num_sim],
+                            self.critic1[:self.num_sim],
+                            self.critic2[:self.num_sim],
                             self.num_real,
                             num_steps_real,
                             self.topic,
