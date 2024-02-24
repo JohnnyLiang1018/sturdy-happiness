@@ -249,15 +249,15 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                         # target_Q2_sim = self.qf2[en_index](obs, policy_action_sim)
                         # target_Q1_real = self.qf1[en_index+self.num_sim](obs, policy_action_real)
                         # target_Q2_real = self.qf2[en_index+self.num_sim](obs, policy_action_real)
-                        target_Q1 = self.qf1[en_index+self.num_sim](obs, sim_a)
-                        target_Q2 = self.qf2[en_index+self.num_sim](obs, sim_a)
+                        target_Q1 = self.qf1[en_index+self.num_sim](obs, policy_action_real)
+                        target_Q2 = self.qf2[en_index+self.num_sim](obs, policy_action_real)
                     else: # critic
                         # target_Q1_sim = self.target_qf1[en_index](obs, policy_action_sim)
                         # target_Q2_sim = self.target_qf2[en_index](obs, policy_action_sim)
                         # target_Q1_real = self.target_qf1[en_index+self.num_sim](obs, policy_action_real)
                         # target_Q2_real = self.target_qf2[en_index+self.num_sim](obs, policy_action_real)
-                        target_Q1 = self.target_qf1[en_index+self.num_sim](obs, sim_a)
-                        target_Q2 = self.target_qf2[en_index+self.num_sim](obs, sim_a)
+                        target_Q1 = self.target_qf1[en_index+self.num_sim](obs, policy_action_real)
+                        target_Q2 = self.target_qf2[en_index+self.num_sim](obs, policy_action_real)
                     L_target_Q.append(target_Q1)
                     L_target_Q.append(target_Q2)
                     # Q_sim.append(target_Q1_sim)
@@ -580,7 +580,7 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 std_Q_critic_list_real_ = self.corrective_feedback(obs=batch_real['next_observations'], update_type=1, is_sim=False)
                 
                 std_Q_actor_list_real = [torch.cat((std_Q_actor_list_sim_[0], std_Q_actor_list_real_[0]))]
-                std_Q_critic_list_real = [torch.cat((std_Q_critic_list_sim_[0], std_Q_critic_list_real_[0]))]
+                std_Q_critic_list_real = [torch.cat((-std_Q_critic_list_sim_[0], std_Q_critic_list_real_[0]))]
  
             # std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
             # std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)

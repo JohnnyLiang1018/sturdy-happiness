@@ -237,7 +237,7 @@ if __name__ == "__main__":
             num_trains_per_train_loop=1000,
             num_expl_steps_per_train_loop_sim=1000,
             num_expl_steps_per_train_loop_real=100,
-            min_num_steps_before_training=2000,
+            min_num_steps_before_training=5000,
             max_path_length=100,
             batch_size=256,
             save_frequency=5,
