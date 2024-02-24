@@ -245,56 +245,56 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                     )
                     
                     if update_type == 0: # actor
-                        # target_Q1_sim = self.qf1[en_index](obs, policy_action_sim)
-                        # target_Q2_sim = self.qf2[en_index](obs, policy_action_sim)
-                        # target_Q1_real = self.qf1[en_index+self.num_sim](obs, policy_action_real)
-                        # target_Q2_real = self.qf2[en_index+self.num_sim](obs, policy_action_real)
-                        target_Q1 = self.qf1[en_index+self.num_sim](obs, policy_action_real)
-                        target_Q2 = self.qf2[en_index+self.num_sim](obs, policy_action_real)
+                        target_Q1_sim = self.qf1[en_index](obs, policy_action_sim)
+                        target_Q2_sim = self.qf2[en_index](obs, policy_action_sim)
+                        target_Q1_real = self.qf1[en_index+self.num_sim](obs, policy_action_real)
+                        target_Q2_real = self.qf2[en_index+self.num_sim](obs, policy_action_real)
+                        # target_Q1 = self.qf1[en_index+self.num_sim](obs, policy_action_real)
+                        # target_Q2 = self.qf2[en_index+self.num_sim](obs, policy_action_real)
                     else: # critic
-                        # target_Q1_sim = self.target_qf1[en_index](obs, policy_action_sim)
-                        # target_Q2_sim = self.target_qf2[en_index](obs, policy_action_sim)
-                        # target_Q1_real = self.target_qf1[en_index+self.num_sim](obs, policy_action_real)
-                        # target_Q2_real = self.target_qf2[en_index+self.num_sim](obs, policy_action_real)
-                        target_Q1 = self.target_qf1[en_index+self.num_sim](obs, policy_action_real)
-                        target_Q2 = self.target_qf2[en_index+self.num_sim](obs, policy_action_real)
-                    L_target_Q.append(target_Q1)
-                    L_target_Q.append(target_Q2)
-                    # Q_sim.append(target_Q1_sim)
-                    # Q_sim.append(target_Q2_sim)
-                    # Q_real.append(target_Q1_real)
-                    # Q_real.append(target_Q2_real)
+                        target_Q1_sim = self.target_qf1[en_index](obs, policy_action_sim)
+                        target_Q2_sim = self.target_qf2[en_index](obs, policy_action_sim)
+                        target_Q1_real = self.target_qf1[en_index+self.num_sim](obs, policy_action_real)
+                        target_Q2_real = self.target_qf2[en_index+self.num_sim](obs, policy_action_real)
+                        # target_Q1 = self.target_qf1[en_index+self.num_sim](obs, policy_action_real)
+                        # target_Q2 = self.target_qf2[en_index+self.num_sim](obs, policy_action_real)
+                    # L_target_Q.append(target_Q1)
+                    # L_target_Q.append(target_Q2)
+                    Q_sim.append(target_Q1_sim)
+                    Q_sim.append(target_Q2_sim)
+                    Q_real.append(target_Q1_real)
+                    Q_real.append(target_Q2_real)
 
                     if en_index == r.start:
-                        # mean_Q_sim = 0.5*(target_Q1_sim + target_Q2_sim) / self.num_sim
-                        # mean_Q_real = 0.5*(target_Q1_real + target_Q2_real) / self.num_real
-                        mean_Q = 0.5*(target_Q1+target_Q2) / self.num_real
+                        mean_Q_sim = 0.5*(target_Q1_sim + target_Q2_sim) / self.num_sim
+                        mean_Q_real = 0.5*(target_Q1_real + target_Q2_real) / self.num_real
+                        # mean_Q = 0.5*(target_Q1+target_Q2) / self.num_real
                     else:
-                        # mean_Q_sim += 0.5*(target_Q1_sim + target_Q2_sim) / self.num_sim
-                        # mean_Q_real += 0.5*(target_Q1_real + target_Q2_real) / self.num_real
-                        mean_Q += 0.5*(target_Q1+target_Q2) / self.num_real
+                        mean_Q_sim += 0.5*(target_Q1_sim + target_Q2_sim) / self.num_sim
+                        mean_Q_real += 0.5*(target_Q1_real + target_Q2_real) / self.num_real
+                        # mean_Q += 0.5*(target_Q1+target_Q2) / self.num_real
 
                     # print("mean Q", np.mean(ptu.get_numpy(mean_Q)))
 
 
             for en_index in range(len(L_target_Q)):
-                # var_Q_sim = (Q_sim[en_index].detach() - mean_Q_sim)**2
-                # var_Q_real = (Q_real[en_index].detach() - mean_Q_real)**2
+                var_Q_sim = (Q_sim[en_index].detach() - mean_Q_sim)**2
+                var_Q_real = (Q_real[en_index].detach() - mean_Q_real)**2
                 if en_index == 0:
-                    var_Q = (L_target_Q[en_index].detach() - mean_Q)**2
+                    # var_Q = (L_target_Q[en_index].detach() - mean_Q)**2
                     ## var_Q = abs(var_Q_sim * var_Q_real)
-                    # var_Q_sim = (Q_sim[en_index].detach() - mean_Q_sim)**2
-                    # var_Q_real = (Q_real[en_index].detach() - mean_Q_real)**2
+                    var_Q_sim = (Q_sim[en_index].detach() - mean_Q_sim)**2
+                    var_Q_real = (Q_real[en_index].detach() - mean_Q_real)**2
                 else:
-                    var_Q += (L_target_Q[en_index].detach() - mean_Q)**2
+                    # var_Q += (L_target_Q[en_index].detach() - mean_Q)**2
                     ## var_Q += abs(var_Q_sim * var_Q_real)
-                    # var_Q_sim += (Q_sim[en_index].detach() - mean_Q_sim)**2
-                    # var_Q_real += (Q_real[en_index].detach() - mean_Q_real)**2
+                    var_Q_sim += (Q_sim[en_index].detach() - mean_Q_sim)**2
+                    var_Q_real += (Q_real[en_index].detach() - mean_Q_real)**2
             
-            var_Q = var_Q / len(L_target_Q)
-            # var_Q_sim = var_Q_sim / len(Q_sim)
-            # var_Q_real = var_Q_real / len(Q_real)
-            # var_Q = var_Q_sim / var_Q_real
+            # var_Q = var_Q / len(L_target_Q)
+            var_Q_sim = var_Q_sim / len(Q_sim)
+            var_Q_real = var_Q_real / len(Q_real)
+            var_Q = var_Q_sim / var_Q_real
             # print("var Q", np.mean(ptu.get_numpy(var_Q)))
             std_Q_list.append(torch.sqrt(var_Q).detach())
                 # std_Q_list[-1] = torch.tensor(1.0) ##
@@ -575,12 +575,12 @@ class NeurIPS20SACEnsembleTrainer(TorchTrainer):
                 std_Q_critic_list_real = self.corrective_feedback(obs=next_obs_real, update_type=1, is_sim=False)
             else:
                 std_Q_actor_list_sim_ = self.corrective_feedback(obs=batch_sim['observations'], update_type=0, is_sim=True)
-                std_Q_critic_list_sim_ = self.corrective_feedback_exp(obs=batch_sim['observations'], sim_a=batch_sim['actions'], update_type=1, is_sim=True)
+                std_Q_critic_list_sim_ = self.corrective_feedback_exp(obs=batch_sim['next_observations'], sim_a=batch_sim['actions'], update_type=1, is_sim=True)
                 std_Q_actor_list_real_ = self.corrective_feedback(obs=batch_real['observations'], update_type=0, is_sim=False)
                 std_Q_critic_list_real_ = self.corrective_feedback(obs=batch_real['next_observations'], update_type=1, is_sim=False)
                 
                 std_Q_actor_list_real = [torch.cat((std_Q_actor_list_sim_[0], std_Q_actor_list_real_[0]))]
-                std_Q_critic_list_real = [torch.cat((-std_Q_critic_list_sim_[0], std_Q_critic_list_real_[0]))]
+                std_Q_critic_list_real = [torch.cat((std_Q_critic_list_sim_[0], std_Q_critic_list_real_[0]))]
  
             # std_Q_actor_list = self.corrective_feedback(obs=obs, update_type=0,is_sim=True)
             # std_Q_critic_list = self.corrective_feedback(obs=next_obs, update_type=1, is_sim=True)

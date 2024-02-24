@@ -6,7 +6,7 @@ import torch
 from rlkit.torch import pytorch_util as ptu
 from examples.sunrise_async.collection_request import ServerRequest
 
-client = ServerRequest()
+#client = ServerRequest()
 
 def multitask_rollout(
         env,
